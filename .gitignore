@@ -11,3 +11,11 @@
 # Matlab data #
 ###############
 *.mat
+
+# Annoying Mac file #
+#####################
+.DS_Store
+
+# MATLAB Autosaves #
+####################
+*.m~
