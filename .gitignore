@@ -1,0 +1,13 @@
+# Figures #
+###########
+*.pdf
+*.eps
+*.fig
+
+# Latex #
+#########
+*.tex
+
+# Matlab data #
+###############
+*.mat
