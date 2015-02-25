@@ -11,23 +11,22 @@ classdef model
     
     properties
         contracts
-        uFunction
-        cFunction
-        typeDistribution
     end
     
     properties (Dependent)
         nContracts
     end
     
+    methods (Abstract)
+        u = uFunction(obj,x, type)
+        c = cFunction(obj,x, type)
+        type = typeDistribution(obj)
+    end
+    
     methods
-        % Empty constructor
-        function Model = model()
-        end;
-        
         % Get Methods
-        function n = get.nContracts(Model)
-            n = length(Model.contracts);
+        function n = get.nContracts(obj)
+            n = length(obj.contracts);
         end;
     end
 end
