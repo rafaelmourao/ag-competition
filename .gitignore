@@ -14,8 +14,9 @@
 
 # Annoying Mac file #
 #####################
-.DS_Store
+*.DS_Store
 
 # MATLAB Autosaves #
 ####################
 *.m~
+*.asv
