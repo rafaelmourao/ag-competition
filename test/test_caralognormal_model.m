@@ -13,7 +13,7 @@ to test the classes in the agSim directory.
 
 
 clear;
-addpath('../agSim')
+addpath('../classes')
 rng(1);
 
 % Input model parameters
