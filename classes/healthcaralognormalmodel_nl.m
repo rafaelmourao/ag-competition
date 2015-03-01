@@ -113,7 +113,7 @@ classdef healthcaralognormalmodel_nl < model
         end
          
         function x = lossDistributionFunction(~,type,l)
-            x = normcdf(type.M,type.S,l);
+            x = normpdf(type.M,type.S,l);
          end
 
         function [populationSize, CalculationParametersEquilibrium, CalculationParametersOptimum] = ...
