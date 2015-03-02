@@ -64,7 +64,7 @@ for j = 1:3
     time(j)=toc;
 end
 disp('First test: Integrals by interval, utilities by interval')
-fprintf('Sum of utilities: %f, Calculation times: %f %f %f seconds\n',sum(u),time)
+fprintf('Sum of utilities: %.16f, Calculation times: %f %f %f seconds\n',sum(u),time)
 for j = 1:3
     tic
     for i = 1:n
@@ -73,7 +73,7 @@ for j = 1:3
     time(j)=toc;
 end
 disp('Second test: Integrals by whole positive region, utilities by interval')
-fprintf('Sum of utilities: %f, Calculation time: Calculation times: %f %f %f seconds\n',sum(u),time)
+fprintf('Sum of utilities: %.16f, Calculation time: Calculation times: %f %f %f seconds\n',sum(u),time)
 for j = 1:3
     tic
     for i = 1:n
@@ -82,7 +82,7 @@ for j = 1:3
     time(j)=toc;
 end
 disp('Third test: Integrals by interval, utilities by maximum over three cases')
-fprintf('Sum of utilities: %f, Calculation time: Calculation times: %f %f %f seconds\n',sum(u),time)
+fprintf('Sum of utilities: %.16f, Calculation time: Calculation times: %f %f %f seconds\n',sum(u),time)
 for j = 1:3
     tic
     for i = 1:n
@@ -91,13 +91,16 @@ for j = 1:3
     time(j)=toc;
 end
 disp('Fourth test: Integrals by whole positive region, utilities by maximum over three cases')
-fprintf('Sum of utilities: %f, Calculation time: Calculation times: %f %f %f seconds\n',sum(u),time)
+fprintf('Sum of utilities: %.16f, Calculation time: Calculation times: %f %f %f seconds\n',sum(u),time)
+
 tic
 Population = population(Model, populationSize);
 time=toc;
 fprintf('Time to create sample: %f\n',time)
+
 [pEquilibrium, DEquilibrium, ACEquilibrium, ComputationOutputEquilibrium] = ...
          Population.findequilibrium(CalculationParametersEquilibrium)
+
 % WEquilibrium = Population.welfare(pEquilibrium, ...
 %                                   costOfPublicFunds);
 %
