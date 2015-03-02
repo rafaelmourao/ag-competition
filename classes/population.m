@@ -16,7 +16,6 @@ classdef population
         nContracts        
     end
     
-    
     methods
         % Contructor
         % This constructor is pretty slow right now, because it loops over
@@ -25,22 +24,25 @@ classdef population
         % super under-vectorized, so could be optimized a lot at the cost
         % of some flexibility.
         function Population = population(Model, n)
-            Population.uMatrix = zeros(n, Model.nContracts);
-            Population.cMatrix = zeros(n, Model.nContracts);
+            n_Contracts = Model.nContracts;
+            u_Matrix = zeros(n, Model.nContracts);
+            c_Matrix = zeros(n, Model.nContracts);
+            type_List = cell(1,n);
             for i = 1 : n
-                type = Model.typeDistribution();
-                Population.typeList{i} = type;
-                for j = 1 : Model.nContracts
+                type = typeDistribution(Model);
+                type_List{i} = type;
+                for j = 1 : n_Contracts
                     x = Model.contracts{j};
-                    Population.uMatrix(i, j) = ...
-                        Model.uFunction(x, type);
-                    Population.cMatrix(i, j) = ...
-                        Model.cFunction(x, type);
-                end;
-            end;
+                    u_Matrix(i, j) = Model.uFunction(x, type);
+                    c_Matrix(i, j) = Model.cFunction(x, type);
+                end
+            end
+            Population.uMatrix    = u_Matrix;
+            Population.cMatrix    = c_Matrix;
+            Population.typeList   = type_List;
             Population.size       = n;
-            Population.nContracts = Model.nContracts;
-        end;
+            Population.nContracts = n_Contracts;
+        end
         
         % Basic functions
         function [D, TC, CS, choiceVector] = demand(Population, p)
