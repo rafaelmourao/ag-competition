@@ -43,18 +43,31 @@ classdef healthcaralognormalmodel_nl < model
                     lossDistributionFunction(obj, type, l), 0, limits(1));
             end
             if limits(3) > limits(2)
-                u = u + integral(@(l) -exp(-type.A*exPostUtility(obj, x, type, l)).*...
+                u = u + integral(@(l) -exp(-type.A*exPostUtility(obj, x, type, l)) .*...
                     lossDistributionFunction(obj,type,l),limits(2),limits(3));
             else
-                u = u + integral(@(l) -exp(-type.A*exPostUtility(obj, x, type, l)).*...
+                u = u + integral(@(l) -exp(-type.A*exPostUtility(obj, x, type, l)) .*...
                     lossDistributionFunction(obj,type,l),limits(1),Inf);
                 return
             end
             if ~isinf(limits(3))
-                u = u + integral(@(l) -exp(-type.A * exPostUtility(obj, x, type, l)).*...
+                u = u + integral(@(l) -exp(-type.A * exPostUtility(obj, x, type, l)) .*...
                     lossDistributionFunction(obj, type, l),limits(3),Inf);
             end
             
+            % Eduardo's addition. Calculate utility from no insurance.
+            xNull.deductible  = Inf;
+            xNull.coinsurance = 1;
+            xNull.oopMax      = Inf;
+            xNull.name        = 'Null Contract';
+            u0 = integral( ...
+                @(l) lossDistributionFunction(obj, type, l) ...
+                .* -exp(-type.A * exPostUtility(obj, x, type, l)) ...
+                , -Inf, 0);
+            
+            % Calculate certainty equivalent
+            CE  = log(u ./ u0) ./ (-type.A);
+            u   = CE;
         end
         
         function u = uFunction_alt(obj, x, type)
@@ -184,7 +197,7 @@ classdef healthcaralognormalmodel_nl < model
             end
         end
         
-        function [u, e] = exPostUtility_alt(~,x, type, l)
+        function [u, e] = exPostUtility_alt(~, x, type, l)
             l = max(l,0);
             u(1,:) = -l;
             e(1,:) = l;
@@ -217,6 +230,7 @@ classdef healthcaralognormalmodel_nl < model
             CalculationParametersOptimum.tolerance = CalculationParametersEquilibrium.tolerance;
             CalculationParametersOptimum.maxIterations = 10^4;
         end;
+        
     end
 end
 
