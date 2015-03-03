@@ -26,21 +26,21 @@ classdef healthcaralognormalmodel_nl < model
             Model.typeDistributionLogCovariance = typeDistributionLogCovariance;
             n = length(deductibleVector);
             for i = 1:n
-                x.deductible =         deductibleVector(i) ;
-                x.coinsurance =        coinsuranceVector(i) ;
-                x.oopMax =                oopMaxVector(i) ;
-                x.name  = num2str(i);
+                x.deductible       = deductibleVector(i) ;
+                x.coinsurance      = coinsuranceVector(i) ;
+                x.oopMax           = oopMaxVector(i) ;
+                x.name             = num2str(i);
                 Model.contracts{i} = x;
             end;
         end
         
         function u = uFunction(obj, x, type)
             
-            [u,~,limits] = exPostUtility(obj, x, type, 0);
-            u = integral(@(x) lossDistributionFunction(obj,type,x),-Inf,0)*u;
+            [u, ~, limits] = exPostUtility(obj, x, type, 0);
+            u = integral(@(x) lossDistributionFunction(obj, type, x), -Inf, 0) * u;
             if limits(1) > 0
-                u = u + integral(@(l) -exp(-type.A*exPostUtility(obj, x, type, l)).*...
-                    lossDistributionFunction(obj,type,l),0,limits(1));
+                u = u + integral(@(l) -exp(-type.A * exPostUtility(obj, x, type, l)).*...
+                    lossDistributionFunction(obj, type, l), 0, limits(1));
             end
             if limits(3) > limits(2)
                 u = u + integral(@(l) -exp(-type.A*exPostUtility(obj, x, type, l)).*...
@@ -51,24 +51,24 @@ classdef healthcaralognormalmodel_nl < model
                 return
             end
             if ~isinf(limits(3))
-                u = u + integral(@(l) -exp(-type.A*exPostUtility(obj, x, type, l)).*...
-                    lossDistributionFunction(obj,type,l),limits(3),Inf);
+                u = u + integral(@(l) -exp(-type.A * exPostUtility(obj, x, type, l)).*...
+                    lossDistributionFunction(obj, type, l),limits(3),Inf);
             end
             
         end
         
         function u = uFunction_alt(obj, x, type)
             
-            [u,~,limits] = exPostUtility(obj, x, type, 0);
-            u = integral(@(x) lossDistributionFunction(obj,type,x),-Inf,0)*u;
-            u = u + integral(@(l) -exp(-type.A*exPostUtility(obj, x, type, l)).*...
-                    lossDistributionFunction(obj,type,l),0,Inf);
+            [u, ~, limits] = exPostUtility(obj, x, type, 0);
+            u = integral(@(x) lossDistributionFunction(obj, type, x), -Inf, 0) * u;
+            u = u + integral(@(l) -exp(-type.A*exPostUtility(obj, x, type, l)) .*...
+                    lossDistributionFunction(obj, type, l), 0, Inf);
         end
         
          function u = uFunction_alt2(obj, x, type)
             
-            [u,~,limits] = exPostUtility(obj, x, type, 0);
-            u = integral(@(x) lossDistributionFunction(obj,type,x),-Inf,0)*u;
+            [u, ~, limits] = exPostUtility(obj, x, type, 0);
+            u = integral(@(x) lossDistributionFunction(obj, type, x), -Inf, 0) * u;
             if limits(1) > 0
                 u = u + integral(@(l) -exp(-type.A*exPostUtility_alt(obj, x, type, l)).*...
                     lossDistributionFunction(obj,type,l),0,limits(1));
@@ -90,7 +90,7 @@ classdef healthcaralognormalmodel_nl < model
         
          function u = uFunction_alt3(obj, x, type)
             
-            [u,~,limits] = exPostUtility(obj, x, type, 0);
+            [u, ~, limits] = exPostUtility(obj, x, type, 0);
             u = integral(@(x) lossDistributionFunction(obj,type,x),-Inf,0)*u;
             u = u + integral(@(l) -exp(-type.A*exPostUtility_alt(obj, x, type, l)).*...
                     lossDistributionFunction(obj,type,l),0,Inf);
