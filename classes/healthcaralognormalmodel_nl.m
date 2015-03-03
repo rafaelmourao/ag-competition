@@ -13,124 +13,162 @@ classdef healthcaralognormalmodel_nl < model
     %   and standard deviation of losses S).
     
     properties
+        nullContract
         typeDistributionMean
         typeDistributionLogCovariance
     end
     
     methods
         % Constructor
-        function Model = healthcaralognormalmodel_nl(deductibleVector, ...
+        function obj = healthcaralognormalmodel_nl(deductibleVector, ...
                 coinsuranceVector, oopMaxVector, typeDistributionMean, typeDistributionLogCovariance)
             
-            Model.typeDistributionMean = typeDistributionMean;
-            Model.typeDistributionLogCovariance = typeDistributionLogCovariance;
+            obj.typeDistributionMean = typeDistributionMean;
+            obj.typeDistributionLogCovariance = typeDistributionLogCovariance;
             n = length(deductibleVector);
             for i = 1:n
                 x.deductible       = deductibleVector(i) ;
                 x.coinsurance      = coinsuranceVector(i) ;
                 x.oopMax           = oopMaxVector(i) ;
                 x.name             = num2str(i);
-                Model.contracts{i} = x;
+                obj.contracts{i} = x;
             end;
+            obj.nullContract.deductible  = Inf;
+            obj.nullContract.coinsurance = 1;
+            obj.nullContract.oopMax      = Inf;
+            obj.nullContract.name        = 'Null Contract';
         end
         
         function u = uFunction(obj, x, type)
             
             [u, ~, limits] = exPostUtility(obj, x, type, 0);
-            u = integral(@(x) lossDistributionFunction(obj, type, x), -Inf, 0) * u;
+            u = integral(@(x) lossDistributionFunction(obj, type, x), -Inf, 0,'AbsTol', 1e-15,'RelTol',1e-12 ) * u;
             if limits(1) > 0
                 u = u + integral(@(l) -exp(-type.A * exPostUtility(obj, x, type, l)).*...
-                    lossDistributionFunction(obj, type, l), 0, limits(1));
+                    lossDistributionFunction(obj, type, l), 0, limits(1),'AbsTol', 1e-15,'RelTol',1e-12);
             end
-            if limits(3) > limits(2)
-                u = u + integral(@(l) -exp(-type.A*exPostUtility(obj, x, type, l)) .*...
-                    lossDistributionFunction(obj,type,l),limits(2),limits(3));
-            else
-                u = u + integral(@(l) -exp(-type.A*exPostUtility(obj, x, type, l)) .*...
-                    lossDistributionFunction(obj,type,l),limits(1),Inf);
-                return
-            end
-            if ~isinf(limits(3))
-                u = u + integral(@(l) -exp(-type.A * exPostUtility(obj, x, type, l)) .*...
-                    lossDistributionFunction(obj, type, l),limits(3),Inf);
+            if ~isinf(limits(1))
+                if limits(3) > limits(2)
+                    u = u + integral(@(l) -exp(-type.A*exPostUtility(obj, x, type, l)) .*...
+                        lossDistributionFunction(obj,type,l),limits(2),limits(3),'AbsTol', 1e-15,'RelTol',1e-12);
+                else
+                    u = u + integral(@(l) -exp(-type.A*exPostUtility(obj, x, type, l)) .*...
+                        lossDistributionFunction(obj,type,l),limits(1),Inf,'AbsTol', 1e-15,'RelTol',1e-12);
+                    return
+                end
+                if ~isinf(limits(3))
+                    u = u + integral(@(l) -exp(-type.A * exPostUtility(obj, x, type, l)) .*...
+                        lossDistributionFunction(obj, type, l),limits(3),Inf,'AbsTol', 1e-15,'RelTol',1e-12);
+                end
             end
             
             % Eduardo's addition. Calculate utility from no insurance.
-            xNull.deductible  = Inf;
-            xNull.coinsurance = 1;
-            xNull.oopMax      = Inf;
-            xNull.name        = 'Null Contract';
-            u0 = integral( ...
-                @(l) lossDistributionFunction(obj, type, l) ...
-                .* -exp(-type.A * exPostUtility(obj, x, type, l)) ...
-                , -Inf, 0);
+            u0 = integral(@(l) -exp(-type.A * exPostUtility(obj, obj.nullContract, type, l)) .*...
+                lossDistributionFunction(obj, type, l),0,1e6,'AbsTol', 1e-15,'RelTol',1e-12);
+            
+            % Calculate certainty equivalent
+            CE  = log(u ./ u0) ./ (-type.A);
+            u   = CE;
+            
+        end
+        
+        function u = uFunction_alt(obj, x, type)
+            
+            [u, ~, limits] = exPostUtility(obj, x, type, 0);
+            u = integral(@(x) lossDistributionFunction(obj, type, x), -Inf, 0,'AbsTol', 1e-15,'RelTol',1e-12) * u;
+            u = u + integral(@(l) -exp(-type.A*exPostUtility(obj, x, type, l)) .*...
+                lossDistributionFunction(obj, type, l), 0, Inf,'AbsTol', 1e-15,'RelTol',1e-12,'WayPoints',limits);
+            
+            % Eduardo's addition. Calculate utility from no insurance.
+            u0 = integral(@(l) -exp(-type.A * exPostUtility(obj, obj.nullContract, type, l)) .*...
+                lossDistributionFunction(obj, type, l),0,1e6,'AbsTol', 1e-15,'RelTol',1e-12);
+            
+            % Calculate certainty equivalent
+            CE  = log(u ./ u0) ./ (-type.A);
+            u   = CE;
+            
+        end
+        
+        function u = uFunction_alt2(obj, x, type)
+            
+            [u, ~, limits] = exPostUtility(obj, x, type, 0);
+            u = integral(@(x) lossDistributionFunction(obj, type, x), -Inf, 0,'AbsTol', 1e-15,'RelTol',1e-12) * u;
+            if limits(1) > 0
+                u = u + integral(@(l) -exp(-type.A*exPostUtility_alt(obj, x, type, l)).*...
+                    lossDistributionFunction(obj,type,l),0,limits(1),'AbsTol', 1e-15,'RelTol',1e-12);
+            end
+            if ~isinf(limits(1))
+                if limits(3) > limits(2)
+                    u = u + integral(@(l) -exp(-type.A*exPostUtility_alt(obj, x, type, l)).*...
+                        lossDistributionFunction(obj,type,l),limits(2),limits(3),'AbsTol', 1e-15,'RelTol',1e-12);
+                else
+                    u = u + integral(@(l) -exp(-type.A*exPostUtility_alt(obj, x, type, l)).*...
+                        lossDistributionFunction(obj,type,l),limits(1),Inf,'AbsTol', 1e-15,'RelTol',1e-12);
+                    return
+                end
+                if ~isinf(limits(3))
+                    u = u + integral(@(l) -exp(-type.A*exPostUtility_alt(obj, x, type, l)).*...
+                        lossDistributionFunction(obj,type,l),limits(3),Inf,'AbsTol', 1e-15,'RelTol',1e-12);
+                end
+            end
+            
+            % Eduardo's addition. Calculate utility from no insurance.
+            u0 = integral(@(l) -exp(-type.A * exPostUtility(obj, obj.nullContract, type, l)) .*...
+                lossDistributionFunction(obj, type, l),0,1e6,'AbsTol', 1e-15,'RelTol',1e-12);
+            
+            % Calculate certainty equivalent
+            CE  = log(u ./ u0) ./ (-type.A);
+            u   = CE;
+            
+        end
+        
+        function u = uFunction_alt3(obj, x, type)
+            
+            [u, ~, limits] = exPostUtility(obj, x, type, 0);
+            u = integral(@(x) lossDistributionFunction(obj,type,x),-Inf,0,'AbsTol', 1e-15,'RelTol',1e-12)*u;
+            u = u + integral(@(l) -exp(-type.A*exPostUtility_alt(obj, x, type, l)).*...
+                lossDistributionFunction(obj,type,l),0,Inf,'AbsTol', 1e-15,'RelTol',1e-12,'WayPoints',limits);
+            
+            % Eduardo's addition. Calculate utility from no insurance.
+            u0 = integral(@(l) -exp(-type.A * exPostUtility(obj, obj.nullContract, type, l)) .*...
+                lossDistributionFunction(obj, type, l),0,1e6,'AbsTol', 1e-15,'RelTol',1e-12);
             
             % Calculate certainty equivalent
             CE  = log(u ./ u0) ./ (-type.A);
             u   = CE;
         end
         
-        function u = uFunction_alt(obj, x, type)
-            
-            [u, ~, limits] = exPostUtility(obj, x, type, 0);
-            u = integral(@(x) lossDistributionFunction(obj, type, x), -Inf, 0) * u;
-            u = u + integral(@(l) -exp(-type.A*exPostUtility(obj, x, type, l)) .*...
-                    lossDistributionFunction(obj, type, l), 0, Inf);
-        end
-        
-         function u = uFunction_alt2(obj, x, type)
-            
-            [u, ~, limits] = exPostUtility(obj, x, type, 0);
-            u = integral(@(x) lossDistributionFunction(obj, type, x), -Inf, 0) * u;
-            if limits(1) > 0
-                u = u + integral(@(l) -exp(-type.A*exPostUtility_alt(obj, x, type, l)).*...
-                    lossDistributionFunction(obj,type,l),0,limits(1));
-            end
-            if limits(3) > limits(2)
-                u = u + integral(@(l) -exp(-type.A*exPostUtility_alt(obj, x, type, l)).*...
-                    lossDistributionFunction(obj,type,l),limits(2),limits(3));
-            else
-                u = u + integral(@(l) -exp(-type.A*exPostUtility_alt(obj, x, type, l)).*...
-                    lossDistributionFunction(obj,type,l),limits(1),Inf);
-                return
-            end
-            if ~isinf(limits(3))
-                u = u + integral(@(l) -exp(-type.A*exPostUtility_alt(obj, x, type, l)).*...
-                    lossDistributionFunction(obj,type,l),limits(3),Inf);
-            end     
-            
-         end
-        
-         function u = uFunction_alt3(obj, x, type)
-            
-            [u, ~, limits] = exPostUtility(obj, x, type, 0);
-            u = integral(@(x) lossDistributionFunction(obj,type,x),-Inf,0)*u;
-            u = u + integral(@(l) -exp(-type.A*exPostUtility_alt(obj, x, type, l)).*...
-                    lossDistributionFunction(obj,type,l),0,Inf);
-        end
-        
         function c = cFunction(obj, x, type)
             
             [~,c,limits] = exPostUtility(obj, x, type, 0);
-            c = integral(@(x) lossDistributionFunction(obj,type,x),-Inf,0)*c;
+            c = integral(@(x) lossDistributionFunction(obj,type,x),-Inf,0,'AbsTol', 1e-15,'RelTol',1e-12)*c;
             if limits(1) > 0
                 c = c + integral(@(l) exPostExpenditure(obj, x, type, l).*...
-                    lossDistributionFunction(obj,type,l),0,limits(1));
+                    lossDistributionFunction(obj,type,l),0,limits(1),'AbsTol', 1e-15,'RelTol',1e-12);
             end
             if limits(3) > limits(2)
                 c = c + integral(@(l) exPostExpenditure(obj, x, type, l).*...
-                    lossDistributionFunction(obj,type,l),limits(2),limits(3));
+                    lossDistributionFunction(obj,type,l),limits(2),limits(3),'AbsTol', 1e-15,'RelTol',1e-12);
             else
                 c = c + integral(@(l) exPostExpenditure(obj, x, type, l).*...
-                    lossDistributionFunction(obj,type,l),limits(1),1e6);
+                    lossDistributionFunction(obj,type,l),limits(1),Inf,'AbsTol', 1e-15,'RelTol',1e-12);
                 return
             end
             if ~isinf(limits(3))
                 c = c + integral(@(l) exPostExpenditure(obj, x, type, l).*...
-                    lossDistributionFunction(obj,type,l),limits(3),1e6);
+                    lossDistributionFunction(obj,type,l),limits(3),Inf,'AbsTol', 1e-15,'RelTol',1e-12);
             end
             
         end
+        
+        function c = cFunction_alt(obj, x, type)
+            
+            [~,c,limits] = exPostUtility(obj, x, type, 0);
+            c = integral(@(x) lossDistributionFunction(obj,type,x),-Inf,0,'AbsTol', 1e-15,'RelTol',1e-12)*c;
+            c = c + integral(@(l) exPostExpenditure(obj, x, type, l).*...
+                lossDistributionFunction(obj,type,l),0,Inf,'AbsTol', 1e-15,'RelTol',1e-12,'WayPoints',limits);
+        end
+        
         
         function Type = typeDistribution(obj)
             v = lognrndfrommoments(...
@@ -181,7 +219,7 @@ classdef healthcaralognormalmodel_nl < model
             for i = 1:length(losses)
                 l = max(losses(i), 0);
                 limits(i, 1) = max(min(x.deductible-(1-x.coinsurance)*type.H/2,x.oopMax-type.H/2),0);
-                limits(i, 2) = max(min(x.deductible-(1-x.coinsurance)*type.H/2,0));
+                limits(i, 2) = max(x.deductible-(1-x.coinsurance)*type.H/2,0);
                 limits(i, 3) = max((x.oopMax-(1-x.coinsurance)*x.deductible)/x.coinsurance ...
                     - (2 - x.coinsurance) * type.H / 2, 0);
                 if l < limits(i, 1)
@@ -208,7 +246,7 @@ classdef healthcaralognormalmodel_nl < model
             [u, loc] = max(u);
             e = e(loc);
         end
-                
+        
         function [populationSize, CalculationParametersEquilibrium, CalculationParametersOptimum] = ...
                 suggestComputationParameters(Model, percentError)
             
