@@ -158,23 +158,23 @@ classdef healthcaralognormalmodel_nl < model
         end
         
         function [e, limits] = exPostExpenditure(obj, x, type, losses)
-            [~,e,limits] = exPostUtility(obj, x, type, losses);
+            [~, e, limits] = exPostUtility(obj, x, type, losses);
         end
         
         function [u, e, limits] = exPostUtility(~, x, type, losses)
-            u = zeros(1,length(losses));
-            e = zeros(1,length(losses));
-            limits = zeros(length(losses),3);
+            u = zeros(1, length(losses));
+            e = zeros(1, length(losses));
+            limits = zeros(length(losses), 3);
             for i = 1:length(losses)
-                l = max(losses(i),0);
-                limits(i,1) = max(min(x.deductible-(1-x.coinsurance)*type.H/2,x.oopMax-type.H/2),0);
-                limits(i,2) = max(min(x.deductible-(1-x.coinsurance)*type.H/2,0));
-                limits(i,3) = max((x.oopMax-(1-x.coinsurance)*x.deductible)/x.coinsurance ...
-                    - (2-x.coinsurance)*type.H/2,0);
-                if l < limits(i,1)
+                l = max(losses(i), 0);
+                limits(i, 1) = max(min(x.deductible-(1-x.coinsurance)*type.H/2,x.oopMax-type.H/2),0);
+                limits(i, 2) = max(min(x.deductible-(1-x.coinsurance)*type.H/2,0));
+                limits(i, 3) = max((x.oopMax-(1-x.coinsurance)*x.deductible)/x.coinsurance ...
+                    - (2 - x.coinsurance) * type.H / 2, 0);
+                if l < limits(i, 1)
                     u(i)= -l;
                     e(i) = l;
-                elseif (l >= limits(i,2)) && (l <= limits(i,3))
+                elseif (l >= limits(i, 2)) && (l <= limits(i, 3))
                     u(i) = (1-x.coinsurance)^2*type.H/2 - (1-x.coinsurance)*x.deductible - x.coinsurance*l;
                     e(i) = (1-x.coinsurance)*type.H + l;
                 else

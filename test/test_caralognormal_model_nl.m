@@ -50,39 +50,43 @@ Model = healthcaralognormalmodel_nl(deductibleVector, ...
     coinsuranceVector, oopMaxVector, typeDistributionMean, typeDistributionLogCovariance);
 
 n = 1000;
-u = zeros(1,n);
-u_alt = zeros(1,n);
+u = zeros(1, n);
+u_alt = zeros(1, n);
 type=cell(1,n);
+
 for i = 1:n
     type{i} = Model.typeDistribution();
 end
+
 for j = 1:3
     tic
     for i = 1:n
-        u(i) = Model.uFunction(Model.contracts{1},type{i});
+        u(i) = Model.uFunction(Model.contracts{1}, type{i});
     end
-    time(j)=toc;
+    time(j) = toc;
 end
 disp('First test: Integrals by interval, utilities by interval')
-fprintf('Sum of utilities: %.16f, Calculation times: %f %f %f seconds\n',sum(u),time)
+fprintf('Sum of utilities: %.16f, Calculation times: %f %f %f seconds\n', sum(u), time)
+
 for j = 1:3
     tic
     for i = 1:n
-        u_alt(i) = Model.uFunction_alt(Model.contracts{1},type{i});
+        u_alt(i) = Model.uFunction_alt(Model.contracts{1}, type{i});
     end
-    time(j)=toc;
+    time(j) = toc;
 end
 disp('Second test: Integrals by whole positive region, utilities by interval')
-fprintf('Sum of utilities: %.16f, Calculation time: Calculation times: %f %f %f seconds\n',sum(u),time)
+fprintf('Sum of utilities: %.16f, Calculation time: Calculation times: %f %f %f seconds\n', sum(u), time)
+
 for j = 1:3
     tic
     for i = 1:n
-        u_alt2(i) = Model.uFunction_alt2(Model.contracts{1},type{i});
+        u_alt2(i) = Model.uFunction_alt2(Model.contracts{1}, type{i});
     end
-    time(j)=toc;
+    time(j) = toc;
 end
 disp('Third test: Integrals by interval, utilities by maximum over three cases')
-fprintf('Sum of utilities: %.16f, Calculation time: Calculation times: %f %f %f seconds\n',sum(u),time)
+fprintf('Sum of utilities: %.16f, Calculation time: Calculation times: %f %f %f seconds\n', sum(u), time)
 for j = 1:3
     tic
     for i = 1:n
