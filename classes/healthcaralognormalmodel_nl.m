@@ -42,7 +42,8 @@ classdef healthcaralognormalmodel_nl < model
         function u = uFunction(obj, x, type)
             
             [u, ~, limits] = exPostUtility(obj, x, type, 0);
-            u = integral(@(x) lossDistributionFunction(obj, type, x), -Inf, 0,'AbsTol', 1e-15,'RelTol',1e-12 ) * u;
+            u = integral(@(x) lossDistributionFunction(obj, type, x), -Inf, 0, ...
+                'AbsTol', 1e-15,'RelTol',1e-12 ) * -exp(-type.A * u);
             if limits(1) > 0
                 u = u + integral(@(l) -exp(-type.A * exPostUtility(obj, x, type, l)).*...
                     lossDistributionFunction(obj, type, l), 0, limits(1),'AbsTol', 1e-15,'RelTol',1e-12);
@@ -75,7 +76,8 @@ classdef healthcaralognormalmodel_nl < model
         function u = uFunction_alt(obj, x, type)
             
             [u, ~, limits] = exPostUtility(obj, x, type, 0);
-            u = integral(@(x) lossDistributionFunction(obj, type, x), -Inf, 0,'AbsTol', 1e-15,'RelTol',1e-12) * u;
+            u = integral(@(x) lossDistributionFunction(obj, type, x), -Inf, 0, ...
+                'AbsTol', 1e-15,'RelTol',1e-12 ) * -exp(-type.A * u);
             u = u + integral(@(l) -exp(-type.A*exPostUtility(obj, x, type, l)) .*...
                 lossDistributionFunction(obj, type, l), 0, Inf,'AbsTol', 1e-15,'RelTol',1e-12,'WayPoints',limits);
             
@@ -92,7 +94,8 @@ classdef healthcaralognormalmodel_nl < model
         function u = uFunction_alt2(obj, x, type)
             
             [u, ~, limits] = exPostUtility(obj, x, type, 0);
-            u = integral(@(x) lossDistributionFunction(obj, type, x), -Inf, 0,'AbsTol', 1e-15,'RelTol',1e-12) * u;
+            u = integral(@(x) lossDistributionFunction(obj, type, x), -Inf, 0, ...
+                'AbsTol', 1e-15,'RelTol',1e-12 ) * -exp(-type.A * u);
             if limits(1) > 0
                 u = u + integral(@(l) -exp(-type.A*exPostUtility_alt(obj, x, type, l)).*...
                     lossDistributionFunction(obj,type,l),0,limits(1),'AbsTol', 1e-15,'RelTol',1e-12);
@@ -125,7 +128,8 @@ classdef healthcaralognormalmodel_nl < model
         function u = uFunction_alt3(obj, x, type)
             
             [u, ~, limits] = exPostUtility(obj, x, type, 0);
-            u = integral(@(x) lossDistributionFunction(obj,type,x),-Inf,0,'AbsTol', 1e-15,'RelTol',1e-12)*u;
+            u = integral(@(x) lossDistributionFunction(obj, type, x), -Inf, 0, ...
+                'AbsTol', 1e-15,'RelTol',1e-12 ) * -exp(-type.A * u);
             u = u + integral(@(l) -exp(-type.A*exPostUtility_alt(obj, x, type, l)).*...
                 lossDistributionFunction(obj,type,l),0,Inf,'AbsTol', 1e-15,'RelTol',1e-12,'WayPoints',limits);
             
