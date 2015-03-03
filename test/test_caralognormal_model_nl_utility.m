@@ -5,7 +5,8 @@
 Author: Eduardo Azevedo and Rafael Mourao
 Date:   2015-03-03
 
-This script tests the methods uFunction and cFunction in the caral class.
+This script tests the methods uFunction and cFunction in
+the healthcaralognormalmodel_nl class.
 %}
 
 
@@ -72,7 +73,7 @@ display('Test uFunction and cFunction');
     display(u);
     display(c);
     
-%% Consumer with no moral hazard and small distribution of losses
+%% Consumer with moral hazard and small distribution of losses
 close all;
 type.H = 1000;
 
