@@ -1,5 +1,5 @@
 clear;
-addpath('../agSim');
+addpath('../classes');
 rng(1);
 
 % Input model parameters

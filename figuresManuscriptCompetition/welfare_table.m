@@ -1,5 +1,5 @@
 clear;
-addpath('../agSim');
+addpath('../classes');
 rng(1);
 
 % Draws a table with welfare comparisons. Saves a .csv for high moral

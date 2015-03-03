@@ -5,7 +5,7 @@
 %% Start
 clear;
 close all;
-addpath('../agSim');
+addpath('../classes');
 addpath('../plotFunctions');
 addpath('../plotFunctions/export_fig');
 addpath('./plotFunctions');
