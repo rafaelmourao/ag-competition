@@ -2,7 +2,7 @@ classdef population
     %population A finite list of simulated consumers.
     %   This class encodes a finite list of consumer types and a utility and cost
     %   matrices associated with this population and a model.
-    %   These matrices specify willingness to pay (cost) of each consumer i for product j. 
+    %   These matrices specify willingness to pay (cost) of each consumer i for product j.
     %   The
     %   constructor takes the model and the population size as inputs. This
     %   class also contains methods for calculating demand, equilibrium,
@@ -13,7 +13,7 @@ classdef population
         uMatrix
         cMatrix
         size
-        nContracts        
+        nContracts
     end
     
     methods
@@ -28,7 +28,7 @@ classdef population
             u_Matrix = zeros(n, Model.nContracts);
             c_Matrix = zeros(n, Model.nContracts);
             type_List = cell(1,n);
-            for i = 1 : n
+            parfor i = 1 : n
                 type = typeDistribution(Model);
                 type_List{i} = type;
                 for j = 1 : n_Contracts
@@ -62,8 +62,56 @@ classdef population
                 TC(j) = sum(Population.cMatrix(...
                     choiceVector == j, j)) / Population.size;
                 CS(j) = sum(surplus(...
-                    choiceVector == j, j)) / Population.size;               
+                    choiceVector == j, j)) / Population.size;
             end;
+            CS = sum(CS);
+        end;
+        
+        function [D, TC, CS, choiceVector] = demand2(Population, p)
+            % demand: Takes as input the population and a price vector.
+            % Outputs demand vector, total cost vector, and consumer suplus
+            % vectors. These are 1xnContracts sized vectors. Also outputs a
+            % choiceVector which is populationSize x 1, and each entry
+            % specifies the contract j chosen by consumer i.
+            surplus = Population.uMatrix - ...
+                repmat(p, Population.size, 1);
+            [~, choiceVector] = max(surplus, [], 2);
+            choiceMatrix = sparse(1:Population.size,choiceVector,1,Population.size,Population.nContracts);
+            %             for j = 1 : Population.nContracts
+            %                 D(j)  = sum(choiceVector == j) / Population.size;
+            %                 TC(j) = sum(Population.cMatrix(...
+            %                     choiceVector == j, j)) / Population.size;
+            %                 CS(j) = sum(surplus(...
+            %                     choiceVector == j, j)) / Population.size;
+            %             end;
+            D = full(ones(1,Population.size)*choiceMatrix)/Population.size;
+            TC = full(mean(Population.cMatrix.*choiceMatrix));
+            CS = full(mean(surplus.*choiceMatrix));
+            CS = sum(CS);
+        end;
+        
+        function [D, TC, CS, choiceVector] = demand3(Population, p)
+            % demand: Takes as input the population and a price vector.
+            % Outputs demand vector, total cost vector, and consumer suplus
+            % vectors. These are 1xnContracts sized vectors. Also outputs a
+            % choiceVector which is populationSize x 1, and each entry
+            % specifies the contract j chosen by consumer i.
+            surplus = Population.uMatrix - ...
+                repmat(p, Population.size, 1);
+            [~, choiceVector] = max(surplus, [], 2);
+            choiceMatrix = zeros(Population.size,Population.nContracts);
+            choiceMatrix( sub2ind([Population.size,Population.nContracts], ...
+                (1:Population.size)', choiceVector) ) = 1;
+            %             for j = 1 : Population.nContracts
+            %                 D(j)  = sum(choiceVector == j) / Population.size;
+            %                 TC(j) = sum(Population.cMatrix(...
+            %                     choiceVector == j, j)) / Population.size;
+            %                 CS(j) = sum(surplus(...
+            %                     choiceVector == j, j)) / Population.size;
+            %             end;
+            D = mean(choiceMatrix);
+            TC = mean(Population.cMatrix.*choiceMatrix);
+            CS = mean(surplus.*choiceMatrix);
             CS = sum(CS);
         end;
         
@@ -112,11 +160,11 @@ classdef population
             nIterations = 0;
             
             function [p1, error] = iteration(p0)
-               [D, TC, ~, ~] = Population.demand(p0);
-               AC            = TC ./ (D + epsilon);
-               error         = norm(AC - p0, Inf);
-               currentFudge  = fudge + 1.1^(-nIterations-1); % I made the fudge factor close to 1 in the first few iterations so that it moves fast in the beginning. But decreasing by 10% in each iteration so that it quickly gets to the value specified in the function call.
-               p1            = currentFudge*AC + (1-currentFudge)*p0;
+                [D, TC, ~, ~] = Population.demand(p0);
+                AC            = TC ./ (D + epsilon);
+                error         = norm(AC - p0, Inf);
+                currentFudge  = fudge + 1.1^(-nIterations-1); % I made the fudge factor close to 1 in the first few iterations so that it moves fast in the beginning. But decreasing by 10% in each iteration so that it quickly gets to the value specified in the function call.
+                p1            = currentFudge*AC + (1-currentFudge)*p0;
             end
             
             p = zeros(1, Population.nContracts);
@@ -133,8 +181,132 @@ classdef population
             ComputationOutput.error       = error;
             ComputationOutput.nIterations = nIterations;
             ComputationOutput.runTime     = toc;
-        end    
-          
+        end
+        
+        function [p, D, AC, ComputationOutput] = findequilibrium_2(Population, CalculationParameters)
+            % findequilibrium: Finds an equilibrium by iterating average cost. To make it
+            % numerically stable must move towards average cost only a
+            % small fraction of the way. Parameters:
+            % CalculationParameters.behavioralAgents,
+            % CalculationParameters.fudge (what fraction of the way you move towards average cost,
+            % 1 being the fastest and something close to 0 being more numerically stable,
+            % CalculationParameters.maxIterations, CalculationParameters.tolerance
+            % Output: price, demand, average cost and a ComputationOutput
+            % struct with fields .nIterations, .error (mean square distance
+            % between p and AC. Note that this number is often big even
+            % with a precise computation because it is driven by contracts
+            % taht are not traded. A good improvement would be having a
+            % better definition of error in each step of the algorithm),
+            % .runTime.
+            % This numerical method is pretty accurate for finding
+            % equilibrium prices within the range of contracts that are
+            % actually traded in equilibrium. The prices of contracts that
+            % are not traded are less stable. They become even less stable
+            % in a model with a lot of contracts. Note that the fudge
+            % factor has to be pretty low to compute things accurately
+            % because of the issue of contracts that are not traded. When a
+            % contract just starts being traded the AC curve can be very
+            % steep, and the algorithm will not converge. The behavioral
+            % agents attenuate this tendency, so a small number of
+            % behavioral agents make the numerics more finicky. The reason
+            % for using this method as opposed to something smarter that
+            % changes fudge factors etc based on the AC curves is that this
+            % is simple to implement, and typically works if we set the
+            % computational parameters conservatively. But there is a lot
+            % of room for improvement.
+            tic;
+            epsilon = CalculationParameters.behavioralAgents / Population.nContracts; % epsilon is the number of behavioral agents per contracts.
+            fudge   = CalculationParameters.fudge;
+            
+            error       = Inf;
+            nIterations = 0;
+            
+            function [p1, error] = iteration(p0)
+                [D, TC, ~, ~] = Population.demand2(p0);
+                AC            = TC ./ (D + epsilon);
+                error         = norm(AC - p0, Inf);
+                currentFudge  = fudge + 1.1^(-nIterations-1); % I made the fudge factor close to 1 in the first few iterations so that it moves fast in the beginning. But decreasing by 10% in each iteration so that it quickly gets to the value specified in the function call.
+                p1            = currentFudge*AC + (1-currentFudge)*p0;
+            end
+            
+            p = zeros(1, Population.nContracts);
+            while (error > CalculationParameters.tolerance) ...
+                    && (nIterations < CalculationParameters.maxIterations)
+                [p, error] = iteration(p);
+                % Require at least 50 iterations.
+                if (nIterations < 50)
+                    error = Inf;
+                end;
+                nIterations = nIterations + 1;
+            end;
+            
+            ComputationOutput.error       = error;
+            ComputationOutput.nIterations = nIterations;
+            ComputationOutput.runTime     = toc;
+        end
+        
+        function [p, D, AC, ComputationOutput] = findequilibrium_3(Population, CalculationParameters)
+            % findequilibrium: Finds an equilibrium by iterating average cost. To make it
+            % numerically stable must move towards average cost only a
+            % small fraction of the way. Parameters:
+            % CalculationParameters.behavioralAgents,
+            % CalculationParameters.fudge (what fraction of the way you move towards average cost,
+            % 1 being the fastest and something close to 0 being more numerically stable,
+            % CalculationParameters.maxIterations, CalculationParameters.tolerance
+            % Output: price, demand, average cost and a ComputationOutput
+            % struct with fields .nIterations, .error (mean square distance
+            % between p and AC. Note that this number is often big even
+            % with a precise computation because it is driven by contracts
+            % taht are not traded. A good improvement would be having a
+            % better definition of error in each step of the algorithm),
+            % .runTime.
+            % This numerical method is pretty accurate for finding
+            % equilibrium prices within the range of contracts that are
+            % actually traded in equilibrium. The prices of contracts that
+            % are not traded are less stable. They become even less stable
+            % in a model with a lot of contracts. Note that the fudge
+            % factor has to be pretty low to compute things accurately
+            % because of the issue of contracts that are not traded. When a
+            % contract just starts being traded the AC curve can be very
+            % steep, and the algorithm will not converge. The behavioral
+            % agents attenuate this tendency, so a small number of
+            % behavioral agents make the numerics more finicky. The reason
+            % for using this method as opposed to something smarter that
+            % changes fudge factors etc based on the AC curves is that this
+            % is simple to implement, and typically works if we set the
+            % computational parameters conservatively. But there is a lot
+            % of room for improvement.
+            tic;
+            epsilon = CalculationParameters.behavioralAgents / Population.nContracts; % epsilon is the number of behavioral agents per contracts.
+            fudge   = CalculationParameters.fudge;
+            
+            error       = Inf;
+            nIterations = 0;
+            
+            function [p1, error] = iteration(p0)
+                [D, TC, ~, ~] = Population.demand3(p0);
+                AC            = TC ./ (D + epsilon);
+                error         = norm(AC - p0, Inf);
+                currentFudge  = fudge + 1.1^(-nIterations-1); % I made the fudge factor close to 1 in the first few iterations so that it moves fast in the beginning. But decreasing by 10% in each iteration so that it quickly gets to the value specified in the function call.
+                p1            = currentFudge*AC + (1-currentFudge)*p0;
+            end
+            
+            p = zeros(1, Population.nContracts);
+            while (error > CalculationParameters.tolerance) ...
+                    && (nIterations < CalculationParameters.maxIterations)
+                [p, error] = iteration(p);
+                % Require at least 50 iterations.
+                if (nIterations < 50)
+                    error = Inf;
+                end;
+                nIterations = nIterations + 1;
+            end;
+            
+            ComputationOutput.error       = error;
+            ComputationOutput.nIterations = nIterations;
+            ComputationOutput.runTime     = toc;
+        end
+        
         function [p, W, ComputationOutput] = findefficient(Population, costOfPublicFunds, CalculationParameters)
             tic;
             % findefficient: This function finds an efficient allocation
@@ -152,13 +324,13 @@ classdef population
             
             % Calculate maximum and minimum marginal utility.
             MU = diff(Population.uMatrix, 1, 2);
-
+            
             % Use this to create upper and lower bound for derivatives and initial condition.
             dp_max = max(MU);
             lower_bound = dp_max .* 0;
             upper_bound = dp_max .* 1.2;
             dp0 = (lower_bound+upper_bound)/2;
-
+            
             % Define function that turns dp into p, function that evaluates
             % -welfare given dp (the difference vector of p), and function that updates the ith
             % coordinate if dp (so that we can choose each dp(j) at a time to maximize welfare).
@@ -168,14 +340,14 @@ classdef population
                 dpOut      = dpIn;
                 dpOut(jIn) = dpjIn;
             end
-
-
+            
+            
             % Initialize loop variables
             nIterations = 0;
             error = Inf;
             W0 = Inf;
             dp = dp0;
-
+            
             % Main loop.
             while (nIterations < CalculationParameters.maxIterations) ...
                     && (error > CalculationParameters.tolerance)
@@ -185,7 +357,7 @@ classdef population
                     [dpj, W] = fminbnd(g, lower_bound(j), upper_bound(j));
                     dp(j) = dpj;
                 end;
-
+                
                 % Update iteration, error, and improvement in welfare.
                 nIterations = nIterations + 1;
                 if nIterations > 50 % Guarantee that at least 50 iterations are done.
@@ -193,7 +365,7 @@ classdef population
                 end;
                 W0 = W;
             end;
-
+            
             p = integratedp(dp);
             W = -W;
             
@@ -238,8 +410,8 @@ classdef population
                 ACFit    = fit(qVector(I)', dACVector(I)', 'smoothingspline');
                 TCFit    = fit(qVector', TCVector' , 'poly3');
                 
-%                 ACdiff = differentiate(ACFit, qVector);
-%                 MCVector = qVector .* ACdiff' + feval(ACFit, qVector)';
+                %                 ACdiff = differentiate(ACFit, qVector);
+                %                 MCVector = qVector .* ACdiff' + feval(ACFit, qVector)';
                 TCdiff = differentiate(TCFit, qVector);
                 MCVector =TCdiff';
                 
