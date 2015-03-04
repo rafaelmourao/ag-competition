@@ -65,7 +65,7 @@ classdef healthcaralognormalmodel_nl < model
             
             % Eduardo's addition. Calculate utility from no insurance.
             u0 = integral(@(l) -exp(-type.A * exPostUtility(obj, obj.nullContract, type, l)) .*...
-                lossDistributionFunction(obj, type, l),0,1e6,'AbsTol', 1e-15,'RelTol',1e-12);
+                lossDistributionFunction(obj, type, l),0,1e6,'AbsTol', 1e-15,'RelTol',1e-12,'WayPoints',[type.M-type.S,type.M,type.M+type.S]);
             
             % Calculate certainty equivalent
             CE  = log(u ./ u0) ./ (-type.A);
