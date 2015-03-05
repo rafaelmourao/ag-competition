@@ -78,12 +78,14 @@ classdef population
             surplus = Population.uMatrix - ...
                 repmat(p, Population.size, 1);
             [~, choiceVector] = max(surplus, [], 2);
-            Population.choiceMatrix = sparse(1:Population.size,choiceVector,true,Population.size,Population.nContracts);
-            D = full(sum(Population.choiceMatrix))/Population.size;
-            TC = full(mean(Population.cMatrix.*Population.choiceMatrix));
+            Population.choiceMatrix = sub2ind(size(surplus),(1:Population.size)',choiceVector);
+            D = histc(choiceVector',1:Population.nContracts)/Population.size;
+            TC = accumarray(choiceVector,...
+                Population.cMatrix(Population.choiceMatrix),[Population.nContracts,1])'/Population.size;
             CS=[];
             if nargout > 2
-                CS = full(mean(surplus.*Population.choiceMatrix));
+            CS = accumarray(choiceVector,...
+                surplus(Population.choiceMatrix),[Population.nContracts,1])'/Population.size;
                 CS = sum(CS);
             end
         end
@@ -97,7 +99,9 @@ classdef population
             surplus = Population.uMatrix - ...
                 repmat(p, Population.size, 1);
             [~, choiceVector] = max(surplus, [], 2);
-            Population.choiceMatrix = sparse(1:Population.size,choiceVector,true,Population.size,Population.nContracts);
+            Population.choiceMatrix = false(Population.size,Population.nContracts);
+            Population.choiceMatrix( sub2ind([Population.size,Population.nContracts], ...
+                (1:Population.size)', choiceVector) ) = true;
             D  = zeros(1, Population.nContracts);
             TC = D;
             CS = D;
@@ -115,12 +119,39 @@ classdef population
             end
         end;
         
+                function [D, TC, CS, choiceVector] = demand4(Population, p)
+            % demand: Takes as input the population and a price vector.
+            % Outputs demand vector, total cost vector, and consumer suplus
+            % vectors. These are 1xnContracts sized vectors. Also outputs a
+            % choiceVector which is populationSize x 1, and each entry
+            % specifies the contract j chosen by consumer i.
+            surplus = Population.uMatrix - ...
+                repmat(p, Population.size, 1);
+            [~, choiceVector] = max(surplus, [], 2);
+            Population.choiceMatrix = sparse(1:Population.size,choiceVector,true,Population.size,Population.nContracts);
+            D  = sum(Population.choiceMatrix) / Population.size;
+            TC = D;
+            CS = D;
+            for j = 1 : Population.nContracts
+                TC(j) = sum(Population.cMatrix(...
+                    Population.choiceMatrix(:,j),j)) / Population.size;
+                if nargout > 2
+                    CS(j) = sum(surplus(...
+                    Population.choiceMatrix(:,j),j)) / Population.size;
+                end
+            end;
+            if nargout > 2
+                CS = sum(CS);
+            end
+        end;
+
+        
         function W = welfare(Population, p, costOfPublicFunds)
             [D, TC, CS, ~] = Population.demand(p);
             W = CS + (1+costOfPublicFunds).*(D * p' - sum(TC));
         end;
         
-        function [D, TC, CS, choiceVector] = demand4(Population, p)
+        function [D, TC, CS, choiceVector] = demand5(Population, p)
             % demand: Takes as input the population and a price vector.
             % Outputs demand vector, total cost vector, and consumer suplus
             % vectors. These are 1xnContracts sized vectors. Also outputs a
@@ -138,7 +169,8 @@ classdef population
                 CS = sum(CS);
             end
         end
-        function [D, TC, CS, choiceVector] = demand5(Population, p)
+        
+        function [D, TC, CS, choiceVector] = demand6(Population, p)
             % demand: Takes as input the population and a price vector.
             % Outputs demand vector, total cost vector, and consumer suplus
             % vectors. These are 1xnContracts sized vectors. Also outputs a
@@ -453,6 +485,68 @@ classdef population
             
             function [p1, error] = iteration(p0)
                 [D, TC] = Population.demand5(p0);
+                AC            = TC ./ (D + epsilon);
+                error         = norm(AC - p0, Inf);
+                currentFudge  = fudge + 1.1^(-nIterations-1); % I made the fudge factor close to 1 in the first few iterations so that it moves fast in the beginning. But decreasing by 10% in each iteration so that it quickly gets to the value specified in the function call.
+                p1            = currentFudge*AC + (1-currentFudge)*p0;
+            end
+            
+            p = zeros(1, Population.nContracts);
+            while (error > CalculationParameters.tolerance) ...
+                    && (nIterations < CalculationParameters.maxIterations)
+                [p, error] = iteration(p);
+                % Require at least 50 iterations.
+                if (nIterations < 50)
+                    error = Inf;
+                end;
+                nIterations = nIterations + 1;
+            end;
+            
+            ComputationOutput.error       = error;
+            ComputationOutput.nIterations = nIterations;
+            ComputationOutput.runTime     = toc;
+        end
+        
+            function [p, D, AC, ComputationOutput] = findequilibrium_6(Population, CalculationParameters)
+            % findequilibrium: Finds an equilibrium by iterating average cost. To make it
+            % numerically stable must move towards average cost only a
+            % small fraction of the way. Parameters:
+            % CalculationParameters.behavioralAgents,
+            % CalculationParameters.fudge (what fraction of the way you move towards average cost,
+            % 1 being the fastest and something close to 0 being more numerically stable,
+            % CalculationParameters.maxIterations, CalculationParameters.tolerance
+            % Output: price, demand, average cost and a ComputationOutput
+            % struct with fields .nIterations, .error (mean square distance
+            % between p and AC. Note that this number is often big even
+            % with a precise computation because it is driven by contracts
+            % taht are not traded. A good improvement would be having a
+            % better definition of error in each step of the algorithm),
+            % .runTime.
+            % This numerical method is pretty accurate for finding
+            % equilibrium prices within the range of contracts that are
+            % actually traded in equilibrium. The prices of contracts that
+            % are not traded are less stable. They become even less stable
+            % in a model with a lot of contracts. Note that the fudge
+            % factor has to be pretty low to compute things accurately
+            % because of the issue of contracts that are not traded. When a
+            % contract just starts being traded the AC curve can be very
+            % steep, and the algorithm will not converge. The behavioral
+            % agents attenuate this tendency, so a small number of
+            % behavioral agents make the numerics more finicky. The reason
+            % for using this method as opposed to something smarter that
+            % changes fudge factors etc based on the AC curves is that this
+            % is simple to implement, and typically works if we set the
+            % computational parameters conservatively. But there is a lot
+            % of room for improvement.
+            tic;
+            epsilon = CalculationParameters.behavioralAgents / Population.nContracts; % epsilon is the number of behavioral agents per contracts.
+            fudge   = CalculationParameters.fudge;
+            
+            error       = Inf;
+            nIterations = 0;
+            
+            function [p1, error] = iteration(p0)
+                [D, TC] = Population.demand6(p0);
                 AC            = TC ./ (D + epsilon);
                 error         = norm(AC - p0, Inf);
                 currentFudge  = fudge + 1.1^(-nIterations-1); % I made the fudge factor close to 1 in the first few iterations so that it moves fast in the beginning. But decreasing by 10% in each iteration so that it quickly gets to the value specified in the function call.
