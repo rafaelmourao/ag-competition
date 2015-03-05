@@ -15,7 +15,9 @@ classdef population
         size
         nContracts
     end
-    
+    properties (Access=private)
+    choiceMatrix
+    end
     methods
         % Contructor
         % This constructor is pretty slow right now, because it loops over
@@ -86,8 +88,11 @@ classdef population
             %             end;
             D = full(ones(1,Population.size)*choiceMatrix)/Population.size;
             TC = full(mean(Population.cMatrix.*choiceMatrix));
+            CS=[];
+            if nargout > 2
             CS = full(mean(surplus.*choiceMatrix));
             CS = sum(CS);
+            end
         end;
         
         function [D, TC, CS, choiceVector] = demand3(Population, p)
@@ -99,8 +104,8 @@ classdef population
             surplus = Population.uMatrix - ...
                 repmat(p, Population.size, 1);
             [~, choiceVector] = max(surplus, [], 2);
-            choiceMatrix = zeros(Population.size,Population.nContracts);
-            choiceMatrix( sub2ind([Population.size,Population.nContracts], ...
+            Population.choiceMatrix = zeros(Population.size,Population.nContracts);
+            Population.choiceMatrix( sub2ind([Population.size,Population.nContracts], ...
                 (1:Population.size)', choiceVector) ) = 1;
             %             for j = 1 : Population.nContracts
             %                 D(j)  = sum(choiceVector == j) / Population.size;
@@ -109,10 +114,13 @@ classdef population
             %                 CS(j) = sum(surplus(...
             %                     choiceVector == j, j)) / Population.size;
             %             end;
-            D = mean(choiceMatrix);
-            TC = mean(Population.cMatrix.*choiceMatrix);
-            CS = mean(surplus.*choiceMatrix);
+            D = mean(Population.choiceMatrix);
+            TC = mean(Population.cMatrix.*Population.choiceMatrix);
+            CS=[];
+            if nargout > 2
+            CS = mean(surplus.*Population.choiceMatrix);
             CS = sum(CS);
+            end
         end;
         
         function W = welfare(Population, p, costOfPublicFunds)
@@ -129,15 +137,15 @@ classdef population
             surplus = Population.uMatrix - ...
                 repmat(p, Population.size, 1);
             [~, choiceVector] = max(surplus, [], 2);
-            choiceMatrix = sparse(1:Population.size,choiceVector,1,Population.size,Population.nContracts);
-            D = full(ones(1,Population.size)*choiceMatrix)/Population.size;
-            TC = full(mean(Population.cMatrix.*choiceMatrix));
+            Population.choiceMatrix = sparse(1:Population.size,choiceVector,1,Population.size,Population.nContracts);
+            D = full(ones(1,Population.size)*Population.choiceMatrix)/Population.size;
+            TC = full(mean(Population.cMatrix.*Population.choiceMatrix));
+            CS=[];
             if nargout > 2
-            CS = full(mean(surplus.*choiceMatrix));
+            CS = full(mean(surplus.*Population.choiceMatrix));
             CS = sum(CS);
             end
         end
-        
         function [D, TC, CS, choiceVector] = demand5(Population, p)
             % demand: Takes as input the population and a price vector.
             % Outputs demand vector, total cost vector, and consumer suplus

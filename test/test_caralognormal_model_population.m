@@ -38,7 +38,7 @@ results=struct;
 parpool(10);
 
 for populationSize = [1e4, 1e5, 1e6]
-    for ncontracts = [5 10 20 50 100 500]
+    for ncontracts = [5 10 20 50 100 200]
         
         modelName              = 'interval';
         slopeVector            = linspace(0,1,ncontracts);
