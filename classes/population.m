@@ -78,21 +78,15 @@ classdef population
             surplus = Population.uMatrix - ...
                 repmat(p, Population.size, 1);
             [~, choiceVector] = max(surplus, [], 2);
-            D  = zeros(1, Population.nContracts);
-            TC = D;
-            CS = D;
-            for j = 1 : Population.nContracts
-                logicalChoiceVector = (choiceVector == j);
-                D(j)  = sum(logicalChoiceVector) / Population.size;
-                TC(j) = sum(Population.cMatrix(logicalChoiceVector,j)) / Population.size;
-                if nargout > 2
-                    CS(j) = sum(surplus(logicalChoiceVector,j)) / Population.size;
-                end
-            end;
+            Population.choiceMatrix = sparse(1:Population.size,choiceVector,true,Population.size,Population.nContracts);
+            D = full(sum(Population.choiceMatrix))/Population.size;
+            TC = full(mean(Population.cMatrix.*Population.choiceMatrix));
+            CS=[];
             if nargout > 2
+                CS = full(mean(surplus.*Population.choiceMatrix));
                 CS = sum(CS);
             end
-        end;
+        end
         
         function [D, TC, CS, choiceVector] = demand3(Population, p)
             % demand: Takes as input the population and a price vector.
@@ -103,9 +97,7 @@ classdef population
             surplus = Population.uMatrix - ...
                 repmat(p, Population.size, 1);
             [~, choiceVector] = max(surplus, [], 2);
-            Population.choiceMatrix = false(Population.size,Population.nContracts);
-            Population.choiceMatrix( sub2ind([Population.size,Population.nContracts], ...
-                (1:Population.size)', choiceVector) ) = true;
+            Population.choiceMatrix = sparse(1:Population.size,choiceVector,true,Population.size,Population.nContracts);
             D  = zeros(1, Population.nContracts);
             TC = D;
             CS = D;
@@ -274,7 +266,7 @@ classdef population
             nIterations = 0;
             
             function [p1, error] = iteration(p0)
-                [D, TC, ~, ~] = Population.demand2(p0);
+                [D, TC] = Population.demand2(p0);
                 AC            = TC ./ (D + epsilon);
                 error         = norm(AC - p0, Inf);
                 currentFudge  = fudge + 1.1^(-nIterations-1); % I made the fudge factor close to 1 in the first few iterations so that it moves fast in the beginning. But decreasing by 10% in each iteration so that it quickly gets to the value specified in the function call.
@@ -336,7 +328,7 @@ classdef population
             nIterations = 0;
             
             function [p1, error] = iteration(p0)
-                [D, TC, ~, ~] = Population.demand3(p0);
+                [D, TC] = Population.demand3(p0);
                 AC            = TC ./ (D + epsilon);
                 error         = norm(AC - p0, Inf);
                 currentFudge  = fudge + 1.1^(-nIterations-1); % I made the fudge factor close to 1 in the first few iterations so that it moves fast in the beginning. But decreasing by 10% in each iteration so that it quickly gets to the value specified in the function call.
