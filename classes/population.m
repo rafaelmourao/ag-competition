@@ -15,8 +15,8 @@ classdef population
         size
         nContracts
     end
-    properties (Access=private)
-    choiceMatrix
+    properties (Access=private, Hidden=true)
+        choiceMatrix
     end
     methods
         % Contructor
@@ -78,20 +78,19 @@ classdef population
             surplus = Population.uMatrix - ...
                 repmat(p, Population.size, 1);
             [~, choiceVector] = max(surplus, [], 2);
-            choiceMatrix = sparse(1:Population.size,choiceVector,1,Population.size,Population.nContracts);
-            %             for j = 1 : Population.nContracts
-            %                 D(j)  = sum(choiceVector == j) / Population.size;
-            %                 TC(j) = sum(Population.cMatrix(...
-            %                     choiceVector == j, j)) / Population.size;
-            %                 CS(j) = sum(surplus(...
-            %                     choiceVector == j, j)) / Population.size;
-            %             end;
-            D = full(ones(1,Population.size)*choiceMatrix)/Population.size;
-            TC = full(mean(Population.cMatrix.*choiceMatrix));
-            CS=[];
+            D  = zeros(1, Population.nContracts);
+            TC = D;
+            CS = D;
+            for j = 1 : Population.nContracts
+                logicalChoiceVector = (choiceVector == j);
+                D(j)  = sum(logicalChoiceVector) / Population.size;
+                TC(j) = sum(Population.cMatrix(logicalChoiceVector,j)) / Population.size;
+                if nargout > 2
+                    CS(j) = sum(surplus(logicalChoiceVector,j)) / Population.size;
+                end
+            end;
             if nargout > 2
-            CS = full(mean(surplus.*choiceMatrix));
-            CS = sum(CS);
+                CS = sum(CS);
             end
         end;
         
@@ -104,22 +103,23 @@ classdef population
             surplus = Population.uMatrix - ...
                 repmat(p, Population.size, 1);
             [~, choiceVector] = max(surplus, [], 2);
-            Population.choiceMatrix = zeros(Population.size,Population.nContracts);
+            Population.choiceMatrix = false(Population.size,Population.nContracts);
             Population.choiceMatrix( sub2ind([Population.size,Population.nContracts], ...
-                (1:Population.size)', choiceVector) ) = 1;
-            %             for j = 1 : Population.nContracts
-            %                 D(j)  = sum(choiceVector == j) / Population.size;
-            %                 TC(j) = sum(Population.cMatrix(...
-            %                     choiceVector == j, j)) / Population.size;
-            %                 CS(j) = sum(surplus(...
-            %                     choiceVector == j, j)) / Population.size;
-            %             end;
-            D = mean(Population.choiceMatrix);
-            TC = mean(Population.cMatrix.*Population.choiceMatrix);
-            CS=[];
+                (1:Population.size)', choiceVector) ) = true;
+            D  = zeros(1, Population.nContracts);
+            TC = D;
+            CS = D;
+            for j = 1 : Population.nContracts
+                D(j)  = sum(Population.choiceMatrix(:,j)) / Population.size;
+                TC(j) = sum(Population.cMatrix(...
+                    Population.choiceMatrix(:,j),j)) / Population.size;
+                if nargout > 2
+                    CS(j) = sum(surplus(...
+                    Population.choiceMatrix(:,j),j)) / Population.size;
+                end
+            end;
             if nargout > 2
-            CS = mean(surplus.*Population.choiceMatrix);
-            CS = sum(CS);
+                CS = sum(CS);
             end
         end;
         
@@ -142,8 +142,8 @@ classdef population
             TC = full(mean(Population.cMatrix.*Population.choiceMatrix));
             CS=[];
             if nargout > 2
-            CS = full(mean(surplus.*Population.choiceMatrix));
-            CS = sum(CS);
+                CS = full(mean(surplus.*Population.choiceMatrix));
+                CS = sum(CS);
             end
         end
         function [D, TC, CS, choiceVector] = demand5(Population, p)
@@ -163,12 +163,12 @@ classdef population
                 TC(j) = sum(Population.cMatrix(...
                     choiceVector == j, j)) / Population.size;
                 if nargout > 2
-                CS(j) = sum(surplus(...
-                    choiceVector == j, j)) / Population.size;
+                    CS(j) = sum(surplus(...
+                        choiceVector == j, j)) / Population.size;
                 end
             end;
             if nargout > 2
-            CS = sum(CS);
+                CS = sum(CS);
             end
         end;
         
