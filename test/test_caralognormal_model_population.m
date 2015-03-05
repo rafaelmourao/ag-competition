@@ -38,7 +38,7 @@ results=struct;
 parpool(10);
 
 for populationSize = [1e4, 1e5, 1e6]
-    for ncontracts = [5 10 20 50 100 500 1000]
+    for ncontracts = [5 10 20 50 100 500]
         
         modelName              = 'interval';
         slopeVector            = linspace(0,1,ncontracts);
@@ -78,6 +78,20 @@ for populationSize = [1e4, 1e5, 1e6]
         
         results.(['p' num2str(populationSize)]).(['c' num2str(ncontracts)]).('t3')= ComputationOutputEquilibrium;
         
+                tic
+        [pEquilibrium, DEquilibrium, ACEquilibrium, ComputationOutputEquilibrium] = ...
+            Population.findequilibrium_4(CalculationParametersEquilibrium);
+        toc
+        
+        results.(['p' num2str(populationSize)]).(['c' num2str(ncontracts)]).('t4')= ComputationOutputEquilibrium;
+        
+                tic
+        [pEquilibrium, DEquilibrium, ACEquilibrium, ComputationOutputEquilibrium] = ...
+            Population.findequilibrium_5(CalculationParametersEquilibrium);
+        toc
+        
+        results.(['p' num2str(populationSize)]).(['c' num2str(ncontracts)]).('t5')= ComputationOutputEquilibrium;
+        
     end
-    save test_population_results.m results
+    save test_population_results.mat results
 end
