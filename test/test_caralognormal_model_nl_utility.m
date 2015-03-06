@@ -68,8 +68,8 @@ display('Test exPostUtility');
     plot(lossGrid, [-uExPost]);    
 
 display('Test uFunction and cFunction');
-    u    = Model.uFunction(Model.contracts{1}, type);
-    c    = Model.cFunction(Model.contracts{1}, type);
+    u    = Model.uFunction(x, type);
+    c    = Model.cFunction(x, type);
     display(u);
     display(c);
     
@@ -97,7 +97,7 @@ display('Test exPostUtility');
     plot(lossGrid, [-uExPost]);    
 
 display('Test uFunction and cFunction');
-    u    = Model.uFunction(Model.contracts{1}, type);
-    c    = Model.cFunction(Model.contracts{1}, type);
+    u    = Model.uFunction(x, type);
+    c    = Model.cFunction(x, type);
     display(u);
     display(c);    
