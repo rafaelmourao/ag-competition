@@ -35,8 +35,8 @@ CalculationParametersEquilibrium.tolerance        = 1e-6;
 
 results=struct;
 
-for populationSize = [1e4, 1e5, 1e6]
-    for ncontracts = [5 10 20 30 50 100 200]
+for populationSize = [1e4 1e5 1e6]
+    for ncontracts = [5 10 20 30 50 100]
         
         modelName              = 'interval';
         slopeVector            = linspace(0,1,ncontracts);
@@ -48,7 +48,7 @@ for populationSize = [1e4, 1e5, 1e6]
         Model = healthcaralognormalmodel(slopeVector, typeDistributionMean, typeDistributionLogCovariance);
         
         tic
-        Population = population(Model, populationSize);        
+        Population = population(Model, populationSize, 12);        
         tempo = toc;
         fprintf('Population generation took %f seconds\n',tempo)
         
@@ -62,41 +62,6 @@ for populationSize = [1e4, 1e5, 1e6]
         
         results.(['p' num2str(populationSize)]).(['c' num2str(ncontracts)]).('t1')= ComputationOutputEquilibrium;
         
-        tic
-        [pEquilibrium, DEquilibrium, ACEquilibrium, ComputationOutputEquilibrium] = ...
-            Population.findequilibrium_2(CalculationParametersEquilibrium);
-        toc
-        
-        results.(['p' num2str(populationSize)]).(['c' num2str(ncontracts)]).('t2')= ComputationOutputEquilibrium;
-        
-        tic
-        [pEquilibrium, DEquilibrium, ACEquilibrium, ComputationOutputEquilibrium] = ...
-            Population.findequilibrium_3(CalculationParametersEquilibrium);
-        toc
-        
-        results.(['p' num2str(populationSize)]).(['c' num2str(ncontracts)]).('t3')= ComputationOutputEquilibrium;
-        
-                tic
-        [pEquilibrium, DEquilibrium, ACEquilibrium, ComputationOutputEquilibrium] = ...
-            Population.findequilibrium_4(CalculationParametersEquilibrium);
-        toc
-        
-        results.(['p' num2str(populationSize)]).(['c' num2str(ncontracts)]).('t4')= ComputationOutputEquilibrium;
-        
-                tic
-        [pEquilibrium, DEquilibrium, ACEquilibrium, ComputationOutputEquilibrium] = ...
-            Population.findequilibrium_5(CalculationParametersEquilibrium);
-        toc
-        
-        results.(['p' num2str(populationSize)]).(['c' num2str(ncontracts)]).('t5')= ComputationOutputEquilibrium;
-        
-                        tic
-        [pEquilibrium, DEquilibrium, ACEquilibrium, ComputationOutputEquilibrium] = ...
-            Population.findequilibrium_6(CalculationParametersEquilibrium);
-        toc
-        
-        results.(['p' num2str(populationSize)]).(['c' num2str(ncontracts)]).('t6')= ComputationOutputEquilibrium;
-       
         save test_population_results.mat results
     end
 end
