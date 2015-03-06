@@ -55,14 +55,14 @@ classdef healthcaralognormalmodel_nl < model
             
             u = u + integral(@(l) -exp(-type.A*exPostUtility(obj, x, type, l)) .*...
                 lossDistributionFunction(obj, type, l), 0, limits(2),...
-                'AbsTol', 1e-15,'RelTol',1e-12,'WayPoints',bounds(isfinite(bounds)));
+                'AbsTol', 1e-15,'RelTol',1e-12,'WayPoints',bounds(isfinite(bounds)))
             
             % Eduardo's addition. Calculate utility from no insurance.
             
             u0 = integral(@(l) -exp(-type.A * ...
                 exPostUtility(obj, obj.nullContract, type, l)) .*...
                 lossDistributionFunction(obj, type, l),max(0,limits(1)),limits(2),...
-                'AbsTol', 1e-15,'RelTol',1e-12);
+                'AbsTol', 1e-15,'RelTol',1e-12)
             
             if (u0 - u > 1e-6)
                 error('Utility without insurance cannot be higher than with it')
@@ -77,7 +77,7 @@ classdef healthcaralognormalmodel_nl < model
         
         function c = cFunction(obj, x, type)
             
-            [~,c,~] = exPostUtility(obj, x, type, 0);
+            [c,~] = exPostCost(obj, x, type, 0);
             limits = integrationLimits(obj, type, 1e-2);
             
             if (limits(1) < 0)
@@ -90,7 +90,7 @@ classdef healthcaralognormalmodel_nl < model
             
             if (limits(2) > 0)
             
-            c = c + integral(@(l) exPostExpenditure(obj, x, type, l).*...
+            c = c + integral(@(l) exPostCost(obj, x, type, l).*...
                 lossDistributionFunction(obj, type, l),max(0,limits(1)),limits(2),...
                 'AbsTol', 1e-15,'RelTol',1e-12);
             
@@ -168,20 +168,21 @@ classdef healthcaralognormalmodel_nl < model
                 end
             end
             
-            
         end
         
         function x = lossDistributionFunction(~,type,l)
             x = normpdf(l,type.M,type.S);
         end
         
-        function [e, limits] = exPostExpenditure(obj, x, type, losses)
-            [~, e, limits] = exPostUtility(obj, x, type, losses);
+        function [cost, bounds] = exPostCost(obj, x, type, losses)
+            [~, e, c, bounds] = exPostUtility(obj, x, type, losses);
+            cost = e - c;            
         end
         
-        function [u, e, bounds] = exPostUtility(~, x, type, losses)
+        function [u, e, c, bounds] = exPostUtility(~, x, type, losses)
             u = zeros(1, length(losses));
             e = zeros(1, length(losses));
+            c = zeros(1, length(losses));
             bounds = zeros(length(losses), 3);
             for i = 1:length(losses)
                 l = max(losses(i), 0);
@@ -192,26 +193,17 @@ classdef healthcaralognormalmodel_nl < model
                 if l < bounds(i, 1)
                     u(i)= -l;
                     e(i) = l;
+                    c(i) = l;
                 elseif (l >= bounds(i, 2)) && (l <= bounds(i, 3))
                     u(i) = (1-x.coinsurance)^2*type.H/2 - (1-x.coinsurance)*x.deductible - x.coinsurance*l;
                     e(i) = (1-x.coinsurance)*type.H + l;
+                    c(i) = x.deductible + (1-x.coinsurance)*(e(i)-x.deductible);
                 else
                     u(i) = type.H/2 - x.oopMax;
                     e(i) = type.H + l;
+                    c(i) = x.oopMax;
                 end
             end
-        end
-        
-        function [u, e] = exPostUtility_alt(~, x, type, l)
-            l = max(l,0);
-            u(1,:) = -l;
-            e(1,:) = l;
-            u(2,:) = (1-x.coinsurance)^2*type.H/2 - (1-x.coinsurance)*x.deductible - x.coinsurance*l;
-            e(2,:) = (1-x.coinsurance)*type.H + l;
-            u(3,:) = type.H/2 - x.oopMax;
-            e(3,:) = type.H + l;
-            [u, loc] = max(u);
-            e = e(loc);
         end
         
         function [populationSize, CalculationParametersEquilibrium, CalculationParametersOptimum] = ...
