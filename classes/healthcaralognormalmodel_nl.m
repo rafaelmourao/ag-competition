@@ -41,7 +41,7 @@ classdef healthcaralognormalmodel_nl < model
         
         function u = uFunction(obj, x, type)
             
-            [u0, ~, bounds] = exPostUtility(obj, x, type, 0);
+            [u0, ~, ~, bounds] = exPostUtility(obj, x, type, 0);
             limits = integrationLimits(obj, type, 1e-2);
             u = 0;
             
@@ -177,14 +177,14 @@ classdef healthcaralognormalmodel_nl < model
         end
         
         function [cost, bounds] = exPostCost(obj, x, type, losses)
-            [~, e, c, bounds] = exPostUtility(obj, x, type, losses);
-            cost = e - c;            
+            [~, expenditure, copay, bounds] = exPostUtility(obj, x, type, losses);
+            cost = expenditure - copay;          
         end
         
-        function [u, e, c, bounds] = exPostUtility(~, x, type, losses)
+        function [u, expenditure, copay, bounds] = exPostUtility(~, x, type, losses)
             u = zeros(1, length(losses));
-            e = zeros(1, length(losses));
-            c = zeros(1, length(losses));
+            expenditure = zeros(1, length(losses));
+            copay = zeros(1, length(losses));
             bounds = zeros(length(losses), 3);
             for i = 1:length(losses)
                 l = max(losses(i), 0);
@@ -194,16 +194,16 @@ classdef healthcaralognormalmodel_nl < model
                     - (2 - x.coinsurance) * type.H / 2, 0);
                 if l < bounds(i, 1)
                     u(i)= -l;
-                    e(i) = l;
-                    c(i) = l;
+                    expenditure(i) = l;
+                    copay(i) = l;
                 elseif (l >= bounds(i, 2)) && (l <= bounds(i, 3))
                     u(i) = (1-x.coinsurance)^2*type.H/2 - (1-x.coinsurance)*x.deductible - x.coinsurance*l;
-                    e(i) = (1-x.coinsurance)*type.H + l;
-                    c(i) = x.deductible + (1-x.coinsurance)*(e(i)-x.deductible);
+                    expenditure(i) = (1-x.coinsurance)*type.H + l;
+                    copay(i) = x.deductible + (1-x.coinsurance)*(expenditure(i)-x.deductible);
                 else
                     u(i) = type.H/2 - x.oopMax;
-                    e(i) = type.H + l;
-                    c(i) = x.oopMax;
+                    expenditure(i) = type.H + l;
+                    copay(i) = x.oopMax;
                 end
             end
         end
