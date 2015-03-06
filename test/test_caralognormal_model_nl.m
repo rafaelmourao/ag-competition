@@ -12,10 +12,9 @@ to test the implementation of the class test_caralognormal_model_nl as well
 as alternative functions
 %}
 
-
 clear;
 addpath('../classes')
-rng(1);
+rng(2);
 
 % Input model parameters
 meanS = sqrt(25000^2 - 5100^2);
@@ -48,77 +47,6 @@ oopMaxVector = [ 4500, 3750, 3500, 2750, 2500 ];
 % Calculate equilibrium and optimal prices.
 Model = healthcaralognormalmodel_nl(deductibleVector, ...
     coinsuranceVector, oopMaxVector, typeDistributionMean, typeDistributionLogCovariance);
-
-n = 1000;
-u = zeros(1, n);
-u_alt = zeros(1, n);
-u_alt2 = zeros(1, n);
-u_alt3 = zeros(1, n);
-c = zeros(1, n);
-c_alt = zeros(1, n);
-type=cell(1,n);
-
-for i = 1:n
-    type{i} = Model.typeDistribution();
-end
-
-for j = 1:3
-    tic
-    for i = 1:n
-        u(i) = Model.uFunction(Model.contracts{1}, type{i});
-    end
-    time(j) = toc;
-end
-disp('First test: Integrals by interval, utilities by interval')
-fprintf('Sum of utilities: %.16f, Calculation times: %f %f %f seconds\n', sum(u), time)
-for j = 1:3
-    tic
-    for i = 1:n
-        u_alt(i) = Model.uFunction_alt(Model.contracts{1}, type{i});
-    end
-    time(j) = toc;
-end
-disp('Second test: Integrals by whole positive region, utilities by interval')
-fprintf('Sum of utilities: %.16f, Calculation time: %f %f %f seconds\n', sum(u_alt), time)
-
-for j = 1:3
-    tic
-    for i = 1:n
-        u_alt2(i) = Model.uFunction_alt2(Model.contracts{1}, type{i});
-    end
-    time(j) = toc;
-end
-disp('Third test: Integrals by interval, utilities by maximum over three cases')
-fprintf('Sum of utilities: %.16f, Calculation time: %f %f %f seconds\n', sum(u_alt2), time)
-for j = 1:3
-    tic
-    for i = 1:n
-        u_alt3(i) = Model.uFunction_alt3(Model.contracts{1},type{i});
-    end
-    time(j)=toc;
-end
-disp('Fourth test: Integrals by whole positive region, utilities by maximum over three cases')
-fprintf('Sum of utilities: %.16f, Calculation time: %f %f %f seconds\n',sum(u_alt3),time)
-
-for j = 1:3
-    tic
-    for i = 1:n
-        c(i) = Model.cFunction(Model.contracts{1},type{i});
-    end
-    time(j)=toc;
-end
-disp('Fifth test: Cost by intervals')
-fprintf('Sum of cost: %.16f, Calculation time: %f %f %f seconds\n',sum(c),time)
-
-for j = 1:3
-    tic
-    for i = 1:n
-        c_alt(i) = Model.cFunction_alt(Model.contracts{1},type{i});
-    end
-    time(j)=toc;
-end
-disp('Sixth test: Cost by whole positive region')
-fprintf('Sum of cost: %.16f, Calculation time: %f %f %f seconds\n',sum(c_alt),time)
 
 tic
 Population = population(Model, populationSize);

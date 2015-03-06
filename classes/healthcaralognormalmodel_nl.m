@@ -41,34 +41,65 @@ classdef healthcaralognormalmodel_nl < model
         
         function u = uFunction(obj, x, type)
             
-            [u, ~, limits] = exPostUtility(obj, x, type, 0);
-            u = integral(@(x) lossDistributionFunction(obj, type, x), -Inf, 0, ...
-                'AbsTol', 1e-15,'RelTol',1e-12 ) * -exp(-type.A * u);
+            [u, ~, bounds] = exPostUtility(obj, x, type, 0);
+            limits = integrationLimits(obj, type, 1e-2);
+            
+            if (limits(1) < 0)
+                
+                u = integral(@(x) lossDistributionFunction(obj, type, x), ...
+                    limits(1), 0,'AbsTol', 1e-15,'RelTol',1e-12 )...
+                    * -exp(-type.A * u);
+                
+            end
+            
+            
             u = u + integral(@(l) -exp(-type.A*exPostUtility(obj, x, type, l)) .*...
-                lossDistributionFunction(obj, type, l), 0, Inf,'AbsTol', 1e-15,'RelTol',1e-12,'WayPoints',limits(isfinite(limits)));
+                lossDistributionFunction(obj, type, l), 0, limits(2),...
+                'AbsTol', 1e-15,'RelTol',1e-12,'WayPoints',bounds(isfinite(bounds)));
             
             % Eduardo's addition. Calculate utility from no insurance.
             
-            u0 = integral(@(l) -exp(-type.A * exPostUtility(obj, obj.nullContract, type, l)) .*...
-                lossDistributionFunction(obj, type, l),0,1e6,'AbsTol', 1e-15,'RelTol',1e-12,'WayPoints',[type.M-50*type.S,type.M,type.M+50*type.S]);
+            u0 = integral(@(l) -exp(-type.A * ...
+                exPostUtility(obj, obj.nullContract, type, l)) .*...
+                lossDistributionFunction(obj, type, l),max(0,limits(1)),limits(2),...
+                'AbsTol', 1e-15,'RelTol',1e-12);
             
+            if (u0 - u > 1e-6)
+                error('Utility without insurance cannot be higher than with it')
+            end
+
             % Calculate certainty equivalent
             
             CE  = log(u ./ u0) ./ (-type.A);
             u   = CE;
             
         end
-                
+        
         function c = cFunction(obj, x, type)
             
-            [~,c,limits] = exPostUtility(obj, x, type, 0);
-            c = integral(@(x) lossDistributionFunction(obj,type,x),-Inf,0,'AbsTol', 1e-15,'RelTol',1e-12)*c;
+            [~,c,~] = exPostUtility(obj, x, type, 0);
+            limits = integrationLimits(obj, type, 1e-2);
+            
+            if (limits(1) < 0)
+                
+                c = integral(@(x) lossDistributionFunction(obj,type,x), ...
+                    limits(1),max(0,limits(2)),...
+                    'AbsTol', 1e-15,'RelTol',1e-12)*c;
+                
+            end
+            
+            if (limits(2) > 0)
+            
             c = c + integral(@(l) exPostExpenditure(obj, x, type, l).*...
-                lossDistributionFunction(obj,type,l),0,Inf,'AbsTol', 1e-15,'RelTol',1e-12,'WayPoints',limits(isfinite(limits)));
+                lossDistributionFunction(obj, type, l),max(0,limits(1)),limits(2),...
+                'AbsTol', 1e-15,'RelTol',1e-12);
+            
+            end
             
         end
         
         function Type = typeDistribution(obj)
+            
             v = lognrndfrommoments(...
                 obj.typeDistributionMean, obj.typeDistributionLogCovariance, 1);
             
@@ -102,6 +133,44 @@ classdef healthcaralognormalmodel_nl < model
             
         end
         
+        function limits = integrationLimits(obj, type, tol)
+            % Finds the smallest possible interval such that all points in
+            % it have positive (at machine accuracy) density. Perfoms a
+            % check to see if integrating the density between these points
+            % results in 1
+            
+            limits(1) = findCloserZero(type.M,1e6,tol);
+            limits(2) = findCloserZero(type.M,-1e6,tol);
+            
+            integralCheck = integral(@(l)...
+                lossDistributionFunction(obj, type, l), ...
+                limits(1),limits(2),'AbsTol', 1e-15,'RelTol',1e-12);
+            
+            if ( abs(integralCheck - 1) > 1e-6 )
+                error('Integral could not be well approximated, or this is not a distribution')
+            end
+            
+            function b = findCloserZero(b,d_init,tol)
+                f_b = 0;
+                d = d_init;
+                while (abs(d) > tol || f_b > 0)
+                    b = b - d;
+                    f_b = obj.lossDistributionFunction(type,b);
+                    if (f_b == 0)
+                        if (sign(d) == sign(d_init))
+                            d = - d / 10;
+                        end
+                    else
+                        if (sign(d) ~= sign(d_init))
+                            d = -d / 10;
+                        end
+                    end
+                end
+            end
+            
+            
+        end
+        
         function x = lossDistributionFunction(~,type,l)
             x = normpdf(l,type.M,type.S);
         end
@@ -110,20 +179,20 @@ classdef healthcaralognormalmodel_nl < model
             [~, e, limits] = exPostUtility(obj, x, type, losses);
         end
         
-        function [u, e, limits] = exPostUtility(~, x, type, losses)
+        function [u, e, bounds] = exPostUtility(~, x, type, losses)
             u = zeros(1, length(losses));
             e = zeros(1, length(losses));
-            limits = zeros(length(losses), 3);
+            bounds = zeros(length(losses), 3);
             for i = 1:length(losses)
                 l = max(losses(i), 0);
-                limits(i, 1) = max(min(x.deductible-(1-x.coinsurance)*type.H/2,x.oopMax-type.H/2),0);
-                limits(i, 2) = max(x.deductible-(1-x.coinsurance)*type.H/2,0);
-                limits(i, 3) = max((x.oopMax-(1-x.coinsurance)*x.deductible)/x.coinsurance ...
+                bounds(i, 1) = max(min(x.deductible-(1-x.coinsurance)*type.H/2,x.oopMax-type.H/2),0);
+                bounds(i, 2) = max(x.deductible-(1-x.coinsurance)*type.H/2,0);
+                bounds(i, 3) = max((x.oopMax-(1-x.coinsurance)*x.deductible)/x.coinsurance ...
                     - (2 - x.coinsurance) * type.H / 2, 0);
-                if l < limits(i, 1)
+                if l < bounds(i, 1)
                     u(i)= -l;
                     e(i) = l;
-                elseif (l >= limits(i, 2)) && (l <= limits(i, 3))
+                elseif (l >= bounds(i, 2)) && (l <= bounds(i, 3))
                     u(i) = (1-x.coinsurance)^2*type.H/2 - (1-x.coinsurance)*x.deductible - x.coinsurance*l;
                     e(i) = (1-x.coinsurance)*type.H + l;
                 else
