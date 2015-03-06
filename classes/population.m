@@ -2,7 +2,7 @@ classdef population
     %population A finite list of simulated consumers.
     %   This class encodes a finite list of consumer types and a utility and cost
     %   matrices associated with this population and a model.
-    %   These matrices specify willingness to pay (cost) of each consumer i for product j. 
+    %   These matrices specify willingness to pay (cost) of each consumer i for product j.
     %   The
     %   constructor takes the model and the population size as inputs. This
     %   class also contains methods for calculating demand, equilibrium,
@@ -13,7 +13,7 @@ classdef population
         uMatrix
         cMatrix
         size
-        nContracts        
+        nContracts
     end
     
     methods
@@ -23,12 +23,15 @@ classdef population
         % easier to use different subclasses of the model class. But it is
         % super under-vectorized, so could be optimized a lot at the cost
         % of some flexibility.
-        function Population = population(Model, n)
+        function Population = population(Model, n, nworkers)
+            if ( nargin < 3 || (nworkers < 0) )
+                nworkers = 0;
+            end               
             n_Contracts = Model.nContracts;
             u_Matrix = zeros(n, Model.nContracts);
             c_Matrix = zeros(n, Model.nContracts);
             type_List = cell(1,n);
-            for i = 1 : n
+            parfor(i = 1 : n, nworkers)
                 type = typeDistribution(Model);
                 type_List{i} = type;
                 for j = 1 : n_Contracts
@@ -45,6 +48,7 @@ classdef population
         end
         
         % Basic functions
+        
         function [D, TC, CS, choiceVector] = demand(Population, p)
             % demand: Takes as input the population and a price vector.
             % Outputs demand vector, total cost vector, and consumer suplus
@@ -53,24 +57,25 @@ classdef population
             % specifies the contract j chosen by consumer i.
             surplus = Population.uMatrix - ...
                 repmat(p, Population.size, 1);
-            [~, choiceVector] = max(surplus, [], 2);
-            D  = zeros(1, Population.nContracts);
-            TC = D;
-            CS = D;
-            for j = 1 : Population.nContracts
-                D(j)  = sum(choiceVector == j) / Population.size;
-                TC(j) = sum(Population.cMatrix(...
-                    choiceVector == j, j)) / Population.size;
-                CS(j) = sum(surplus(...
-                    choiceVector == j, j)) / Population.size;               
-            end;
-            CS = sum(CS);
-        end;
-        
+            [maxSurplus, choiceVector] = max(surplus, [], 2);
+            % Getting the matrix indices for the maximum surpluses
+            choiceIndices = sub2ind(size(surplus),(1:Population.size)',choiceVector);
+            % Using histc to get the frequency of every contract choice
+            D = histc(choiceVector',1:Population.nContracts)/Population.size;
+            % Calculating the cost for each contract by using the
+            % matlab function accumarray, summing all expected costs 
+            % according to the  choice vector subscripts
+            TC = accumarray(choiceVector, Population.cMatrix(choiceIndices), ...
+                [Population.nContracts,1])'/Population.size;
+            if nargout > 2
+            CS = mean(maxSurplus);
+            end
+        end
+               
         function W = welfare(Population, p, costOfPublicFunds)
             [D, TC, CS, ~] = Population.demand(p);
             W = CS + (1+costOfPublicFunds).*(D * p' - sum(TC));
-        end;
+        end;      
         
         % Computational methods
         function [p, D, AC, ComputationOutput] = findequilibrium(Population, CalculationParameters)
@@ -112,11 +117,11 @@ classdef population
             nIterations = 0;
             
             function [p1, error] = iteration(p0)
-               [D, TC, ~, ~] = Population.demand(p0);
-               AC            = TC ./ (D + epsilon);
-               error         = norm(AC - p0, Inf);
-               currentFudge  = fudge + 1.1^(-nIterations-1); % I made the fudge factor close to 1 in the first few iterations so that it moves fast in the beginning. But decreasing by 10% in each iteration so that it quickly gets to the value specified in the function call.
-               p1            = currentFudge*AC + (1-currentFudge)*p0;
+                [D, TC] = Population.demand(p0);
+                AC            = TC ./ (D + epsilon);
+                error         = norm(AC - p0, Inf);
+                currentFudge  = fudge + 1.1^(-nIterations-1); % I made the fudge factor close to 1 in the first few iterations so that it moves fast in the beginning. But decreasing by 10% in each iteration so that it quickly gets to the value specified in the function call.
+                p1            = currentFudge*AC + (1-currentFudge)*p0;
             end
             
             p = zeros(1, Population.nContracts);
@@ -133,8 +138,8 @@ classdef population
             ComputationOutput.error       = error;
             ComputationOutput.nIterations = nIterations;
             ComputationOutput.runTime     = toc;
-        end    
-          
+        end
+        
         function [p, W, ComputationOutput] = findefficient(Population, costOfPublicFunds, CalculationParameters)
             tic;
             % findefficient: This function finds an efficient allocation
@@ -152,13 +157,13 @@ classdef population
             
             % Calculate maximum and minimum marginal utility.
             MU = diff(Population.uMatrix, 1, 2);
-
+            
             % Use this to create upper and lower bound for derivatives and initial condition.
             dp_max = max(MU);
             lower_bound = dp_max .* 0;
             upper_bound = dp_max .* 1.2;
             dp0 = (lower_bound+upper_bound)/2;
-
+            
             % Define function that turns dp into p, function that evaluates
             % -welfare given dp (the difference vector of p), and function that updates the ith
             % coordinate if dp (so that we can choose each dp(j) at a time to maximize welfare).
@@ -168,14 +173,14 @@ classdef population
                 dpOut      = dpIn;
                 dpOut(jIn) = dpjIn;
             end
-
-
+            
+            
             % Initialize loop variables
             nIterations = 0;
             error = Inf;
             W0 = Inf;
             dp = dp0;
-
+            
             % Main loop.
             while (nIterations < CalculationParameters.maxIterations) ...
                     && (error > CalculationParameters.tolerance)
@@ -185,7 +190,7 @@ classdef population
                     [dpj, W] = fminbnd(g, lower_bound(j), upper_bound(j));
                     dp(j) = dpj;
                 end;
-
+                
                 % Update iteration, error, and improvement in welfare.
                 nIterations = nIterations + 1;
                 if nIterations > 50 % Guarantee that at least 50 iterations are done.
@@ -193,7 +198,7 @@ classdef population
                 end;
                 W0 = W;
             end;
-
+            
             p = integratedp(dp);
             W = -W;
             
@@ -238,8 +243,8 @@ classdef population
                 ACFit    = fit(qVector(I)', dACVector(I)', 'smoothingspline');
                 TCFit    = fit(qVector', TCVector' , 'poly3');
                 
-%                 ACdiff = differentiate(ACFit, qVector);
-%                 MCVector = qVector .* ACdiff' + feval(ACFit, qVector)';
+                %                 ACdiff = differentiate(ACFit, qVector);
+                %                 MCVector = qVector .* ACdiff' + feval(ACFit, qVector)';
                 TCdiff = differentiate(TCFit, qVector);
                 MCVector =TCdiff';
                 
