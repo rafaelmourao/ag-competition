@@ -41,28 +41,29 @@ classdef healthcaralognormalmodel_nl < model
         
         function u = uFunction(obj, x, type)
             
-            [u, ~, bounds] = exPostUtility(obj, x, type, 0);
+            [u0, ~, bounds] = exPostUtility(obj, x, type, 0);
             limits = integrationLimits(obj, type, 1e-2);
+            u = 0;
             
             if (limits(1) < 0)
                 
                 u = integral(@(x) lossDistributionFunction(obj, type, x), ...
                     limits(1), 0,'AbsTol', 1e-15,'RelTol',1e-12 )...
-                    * -exp(-type.A * u);
+                    * -exp(-type.A * u0);
                 
             end
-            
+                
             
             u = u + integral(@(l) -exp(-type.A*exPostUtility(obj, x, type, l)) .*...
                 lossDistributionFunction(obj, type, l), 0, limits(2),...
-                'AbsTol', 1e-15,'RelTol',1e-12,'WayPoints',bounds(isfinite(bounds)))
+                'AbsTol', 1e-15,'RelTol',1e-12,'WayPoints',bounds(isfinite(bounds)));
             
             % Eduardo's addition. Calculate utility from no insurance.
             
             u0 = integral(@(l) -exp(-type.A * ...
                 exPostUtility(obj, obj.nullContract, type, l)) .*...
                 lossDistributionFunction(obj, type, l),max(0,limits(1)),limits(2),...
-                'AbsTol', 1e-15,'RelTol',1e-12)
+                'AbsTol', 1e-15,'RelTol',1e-12);
             
             if (u0 - u > 1e-6)
                 error('Utility without insurance cannot be higher than with it')
@@ -77,14 +78,15 @@ classdef healthcaralognormalmodel_nl < model
         
         function c = cFunction(obj, x, type)
             
-            [c,~] = exPostCost(obj, x, type, 0);
+            [c0,~] = exPostCost(obj, x, type, 0);
             limits = integrationLimits(obj, type, 1e-2);
+            c = 0;
             
             if (limits(1) < 0)
                 
                 c = integral(@(x) lossDistributionFunction(obj,type,x), ...
                     limits(1),max(0,limits(2)),...
-                    'AbsTol', 1e-15,'RelTol',1e-12)*c;
+                    'AbsTol', 1e-15,'RelTol',1e-12)*c0;
                 
             end
             
