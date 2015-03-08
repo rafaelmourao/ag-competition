@@ -141,8 +141,6 @@ display('Test exPostUtility');
     display(uExPost);
     display(eExPost);
     
-    hold on;
-    
     figure();
     plot(lossGrid, [eExPost; lossGrid]);
     title('Ex post expenditure vs. loss')
@@ -213,10 +211,56 @@ for i = 1:nRiskAversionGrid
     cVector(i) = Model.cFunction(x, type);
 end;
 
-hold on;
-
 figure();
 plot(riskAversionGrid, uVector);
+title('Willingness to pay vs risk aversion')
+
+figure();
+plot(riskAversionGrid, cVector);
+title('Cost vs risk aversion')
+
+%% Varying risk aversion in the aproximately linear case
+%{
+Consider now a contract that is linear in the relevant range.
+We should find that willingness to pay increases linearly with risk
+aversion. Losses are small enough that the public insurance issue is not
+relevant.
+%}
+close all;
+
+display('Contract');
+x.deductible  =  0;
+x.coinsurance = 0.5;
+x.oopMax      = 30000;
+display(x);
+
+type.S = 200;
+type.H = 0;
+
+display(type);
+
+nRiskAversionGrid   = 100;
+minRiskAversionGrid = 10^(-5);
+maxRiskAversionGrid = 10^(-2);
+riskAversionGrid    = ...
+    linspace(minRiskAversionGrid, maxRiskAversionGrid, nRiskAversionGrid);
+uVector = zeros(nRiskAversionGrid, 1);
+cVector = zeros(nRiskAversionGrid, 1);
+
+uBenchmark = (1 - x.coinsurance)^2 / 2 .* type.H ...
+    + (1 - x.coinsurance) .* type.M ...
+    + 0.5 .* (1 - x.coinsurance) .* (1 + x.coinsurance) ...
+    .* type.S .^ 2 ...
+    .* riskAversionGrid;
+
+for i = 1:nRiskAversionGrid
+    type.A     = riskAversionGrid(i);
+    uVector(i) = Model.uFunction(x, type);
+    cVector(i) = Model.cFunction(x, type);
+end;
+
+figure();
+plot(riskAversionGrid, [uVector'; uBenchmark]);
 title('Willingness to pay vs risk aversion')
 
 figure();
