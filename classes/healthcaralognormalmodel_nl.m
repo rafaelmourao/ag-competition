@@ -13,6 +13,7 @@ classdef healthcaralognormalmodel_nl < model
     %   and standard deviation of losses S).
     
     properties
+        publicInsuranceMaximum
         nullContract
         typeDistributionMean
         typeDistributionLogCovariance
@@ -21,7 +22,8 @@ classdef healthcaralognormalmodel_nl < model
     methods
         % Constructor
         function obj = healthcaralognormalmodel_nl(deductibleVector, ...
-                coinsuranceVector, oopMaxVector, typeDistributionMean, typeDistributionLogCovariance)
+                coinsuranceVector, oopMaxVector, publicInsuranceMaximum, ...
+                typeDistributionMean, typeDistributionLogCovariance)
             
             obj.typeDistributionMean = typeDistributionMean;
             obj.typeDistributionLogCovariance = typeDistributionLogCovariance;
@@ -33,9 +35,11 @@ classdef healthcaralognormalmodel_nl < model
                 x.name             = num2str(i);
                 obj.contracts{i} = x;
             end;
-            obj.nullContract.deductible  = Inf;
+            
+            obj.publicInsuranceMaximum   = publicInsuranceMaximum;
+            obj.nullContract.deductible  = publicInsuranceMaximum;
             obj.nullContract.coinsurance = 1;
-            obj.nullContract.oopMax      = Inf;
+            obj.nullContract.oopMax      = publicInsuranceMaximum;
             obj.nullContract.name        = 'Null Contract';
         end
         
@@ -193,33 +197,64 @@ classdef healthcaralognormalmodel_nl < model
         end
         
         function [cost, bounds] = exPostCost(obj, x, type, losses)
-            [~, expenditure, copay, bounds] = exPostUtility(obj, x, type, losses);
-            cost = expenditure - copay;
+            if (x.deductible == obj.publicInsuranceMaximum)
+                cost = 0;
+                bounds = 0;
+            else
+                [~, expenditure, copay, bounds] = exPostUtility(obj, x, type, losses);
+                cost = expenditure - copay;
+            end
         end
         
-        function [u, expenditure, copay, bounds] = exPostUtility(~, x, type, losses)
+        function [u, expenditure, payment, bounds] = exPostUtility(obj, x, type, losses)
+            
+            % Checking contract
+            if ( x.coinsurance < 0 || x.coinsurance > 1 )
+                error('Coinsurance must be between zero and one')
+            elseif ( x.deductible > x.oopMax || x.deductible < 0 )
+                error(['Deductible must be higher than zero, and lower than'...
+                    ' the out of pocket maximum'])
+            elseif ( x.oopMax > obj.publicInsuranceMaximum )
+                error(['out of pocket maximum must be lower than the public'...
+                    'insurance maximum'])
+            end
+            
+            % Initializing variables
             u = zeros(1, length(losses));
             expenditure = zeros(1, length(losses));
-            copay = zeros(1, length(losses));
+            payment = zeros(1, length(losses));
             bounds = zeros(length(losses), 3);
+            
             for i = 1:length(losses)
+                
+                % Loss is bounded below by zero
                 l = max(losses(i), 0);
+                
+                % Calculating the loss boundaries for each interval of expenses
                 bounds(i, 1) = max(min(x.deductible-(1-x.coinsurance)*type.H/2,x.oopMax-type.H/2),0);
                 bounds(i, 2) = max(x.deductible-(1-x.coinsurance)*type.H/2,0);
                 bounds(i, 3) = max((x.oopMax-(1-x.coinsurance)*x.deductible)/x.coinsurance ...
                     - (2 - x.coinsurance) * type.H / 2, 0);
+            
                 if l < bounds(i, 1)
-                    u(i)= -l;
                     expenditure(i) = l;
-                    copay(i) = l;
+                    if (x.deductible == obj.publicInsuranceMaximum)
+                        u(i) = max(-l,-obj.publicInsuranceMaximum);
+                        payment(i) = min(l,obj.publicInsuranceMaximum);
+                    else
+                        u(i) = -l;
+                        payment(i) = l;
+                    end
+                    
                 elseif (l >= bounds(i, 2)) && (l <= bounds(i, 3))
                     u(i) = (1-x.coinsurance)^2*type.H/2 - (1-x.coinsurance)*x.deductible - x.coinsurance*l;
                     expenditure(i) = (1-x.coinsurance)*type.H + l;
-                    copay(i) = x.deductible + (1-x.coinsurance)*(expenditure(i)-x.deductible);
+                    payment(i) = x.deductible + (1-x.coinsurance)*(expenditure(i)-x.deductible);
+                    
                 else
                     u(i) = type.H/2 - x.oopMax;
                     expenditure(i) = type.H + l;
-                    copay(i) = x.oopMax;
+                    payment(i) = x.oopMax;
                 end
             end
         end

@@ -28,12 +28,13 @@ typeDistributionLogCovariance = ...
 costOfPublicFunds = 0;
 
 % Set up model
-deductibleVector  = [1500, 750, 500, 250, 0];
-coinsuranceVector = [.1, .1, .1, .1, .1];
-oopMaxVector      = [4500, 3750, 3500, 2750, 2500];
+deductibleVector       = [1500, 750, 500, 250, 0];
+coinsuranceVector      = [.1, .1, .1, .1, .1];
+oopMaxVector           = [4500, 3750, 3500, 2750, 2500];
+publicInsuranceMaximum = 30000;
 
-Model = healthcaralognormalmodel_nl( ...
-    deductibleVector, coinsuranceVector, oopMaxVector, ...
+Model = healthcaralognormalmodel_nl( deductibleVector, ...
+    coinsuranceVector, oopMaxVector, publicInsuranceMaximum, ...  
     typeDistributionMean, typeDistributionLogCovariance);
 
 %% Consumer with no moral hazard and small distribution of losses
