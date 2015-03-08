@@ -77,11 +77,11 @@ classdef healthcaralognormalmodel_nl < model
                 u0 = u0 + integral(@(l) -exp(-type.A * ...
                     exPostUtility(obj, obj.nullContract, type, l)) .*...
                     lossDistributionFunction(obj, type, l), max(limits(1),0), limits(2),...
-                    'AbsTol', 1e-15,'RelTol',1e-12);
+                    'AbsTol', 1e-15,'RelTol',1e-12,'WayPoints',bounds(isfinite(bounds)));
                 
             end
             
-            if (u0 - u > 1e-6)
+            if ( (u0 - u)/abs(u) > 1e-6)
                 disp(type)
                 disp(x)
                 fprintf('Utility with insurance: %.8f\n',u)
