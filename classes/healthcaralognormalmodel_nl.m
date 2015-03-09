@@ -45,13 +45,21 @@ classdef healthcaralognormalmodel_nl < model
         
         function u = uFunction(obj, x, type)
             
+            % Checking contract
+            checkContract(obj, x);
+            
+            % If contract is null, then return zero
+            if (x.deductible == obj.publicInsuranceMaximum)
+                u = 0;
+                return
+            end
             
             % Calculate ex post utility in case of no losses
             [uEx_0, ~, ~, bounds] = exPostUtility(obj, x, type, 0);
             % Calculate limit of integration for the expectation
             limits = integrationLimits(obj, type, 1e-2);
-            u0 = 0; % Utility with no insurance
-            u = 0; % Utility with insurance
+            u0 = 0; % Willingness to pay with no insurance
+            u = 0; % With insurance
             
             if (limits(1) < 0) % Integrals in the region of no loss
                 
@@ -60,28 +68,31 @@ classdef healthcaralognormalmodel_nl < model
                 p_0 = integral(@(x) lossDistributionFunction(obj, type, x), ...
                     limits(1), max(limits(2),0), 'AbsTol', 1e-15,'RelTol',1e-12 );
                 
-                u = p_0 * -exp(-type.A * uEx_0);
+                u = p_0 * exp(-type.A * uEx_0);
                 
                 % In case of no insurance, ex post utility is zero
                 
-                u0 = -p_0;
+                u0 = p_0;
                 
             end
             
             if (limits(2) > 0)
                 
-                u = u + integral(@(l) -exp(-type.A*exPostUtility(obj, x, type, l)) .*...
+                u = u + integral(@(l) exp(-type.A*exPostUtility(obj, x, type, l)) .*...
                     lossDistributionFunction(obj, type, l), max(limits(1),0), limits(2),...
                     'AbsTol', 1e-15,'RelTol',1e-12,'WayPoints',bounds(isfinite(bounds)));
                 
-                u0 = u0 + integral(@(l) -exp(-type.A * ...
+                u0 = u0 + integral(@(l) exp(-type.A * ...
                     exPostUtility(obj, obj.nullContract, type, l)) .*...
                     lossDistributionFunction(obj, type, l), max(limits(1),0), limits(2),...
                     'AbsTol', 1e-15,'RelTol',1e-12,'WayPoints',bounds(isfinite(bounds)));
                 
             end
             
-            if ( (u0 - u)/abs(u) > 1e-6)
+            u = -log(u)/type.A;
+            u0 = -log(u0)/type.A;
+            
+            if ( (u0 - u)/abs(u) > 1e-6 )
                 disp(type)
                 disp(x)
                 fprintf('Utility with insurance: %.8f\n',u)
@@ -89,14 +100,21 @@ classdef healthcaralognormalmodel_nl < model
                 error('Utility without insurance cannot be higher than with it')
             end
             
-            % Calculate certainty equivalent
-            
-            CE  = log(u ./ u0) ./ (-type.A);
-            u   = CE;
+            u  = u - u0;
             
         end
         
         function c = cFunction(obj, x, type)
+            
+            % Checking contract
+            checkContract(obj, x);
+            
+            % If contract is null, then return zero cost
+            
+            if (x.deductible == obj.publicInsuranceMaximum)
+                c = 0;
+                return
+            end
             
             [c0, bounds] = exPostCost(obj, x, type, 0);
             limits = integrationLimits(obj, type, 1e-2);
@@ -155,6 +173,18 @@ classdef healthcaralognormalmodel_nl < model
             
         end
         
+        function checkContract(obj, x)
+            if ( x.coinsurance < 0 || x.coinsurance > 1 )
+                error('Coinsurance must be between zero and one')
+            elseif ( x.deductible > x.oopMax || x.deductible < 0 )
+                error(['Deductible must be higher than zero, and lower than'...
+                    ' the out of pocket maximum'])
+            elseif ( x.oopMax > obj.publicInsuranceMaximum )
+                error(['Out of pocket maximum must be lower than the public'...
+                    'insurance maximum'])
+            end
+        end
+        
         function limits = integrationLimits(obj, type, tol)
             % Finds the smallest possible interval such that all points in
             % it have positive (at machine accuracy) density. Perfoms a
@@ -207,18 +237,7 @@ classdef healthcaralognormalmodel_nl < model
         end
         
         function [u, expenditure, payment, bounds] = exPostUtility(obj, x, type, losses)
-            
-            % Checking contract
-            if ( x.coinsurance < 0 || x.coinsurance > 1 )
-                error('Coinsurance must be between zero and one')
-            elseif ( x.deductible > x.oopMax || x.deductible < 0 )
-                error(['Deductible must be higher than zero, and lower than'...
-                    ' the out of pocket maximum'])
-            elseif ( x.oopMax > obj.publicInsuranceMaximum )
-                error(['out of pocket maximum must be lower than the public'...
-                    'insurance maximum'])
-            end
-            
+                        
             % Initializing variables
             u = zeros(1, length(losses));
             expenditure = zeros(1, length(losses));
@@ -235,7 +254,7 @@ classdef healthcaralognormalmodel_nl < model
                 bounds(i, 2) = max(x.deductible-(1-x.coinsurance)*type.H/2,0);
                 bounds(i, 3) = max((x.oopMax-(1-x.coinsurance)*x.deductible)/x.coinsurance ...
                     - (2 - x.coinsurance) * type.H / 2, 0);
-            
+                
                 if l < bounds(i, 1)
                     expenditure(i) = l;
                     if (x.deductible == obj.publicInsuranceMaximum)
