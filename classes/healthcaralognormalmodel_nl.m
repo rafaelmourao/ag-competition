@@ -66,7 +66,7 @@ classdef healthcaralognormalmodel_nl < model
                 % Calculate the probability of the loss being zero
                 
                 p_0 = integral(@(x) lossDistributionFunction(obj, type, x), ...
-                    limits(1), max(limits(2),0), 'AbsTol', 1e-15,'RelTol',1e-12 );
+                    limits(1), min(limits(2),0), 'AbsTol', 1e-15,'RelTol',1e-12 );
                 
                 u = p_0 * exp(-type.A * uEx_0);
                 
