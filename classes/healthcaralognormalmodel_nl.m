@@ -92,13 +92,13 @@ classdef healthcaralognormalmodel_nl < model
             u = -log(u)/type.A;
             u0 = -log(u0)/type.A;
             
-            if ( (u0 - u)/abs(u) > 1e-6 )
-                disp(type)
-                disp(x)
-                fprintf('Utility with insurance: %.8f\n',u)
-                fprintf('Utility without insurance: %.8f\n',u0)
-                error('Utility without insurance cannot be higher than with it')
-            end
+%             if ( (u0 - u)/abs(u) > 1e-6 )
+%                 disp(type)
+%                 disp(x)
+%                 fprintf('Utility with insurance: %.8f\n',u)
+%                 fprintf('Utility without insurance: %.8f\n',u0)
+%                 error('Utility without insurance cannot be higher than with it')
+%             end
             
             u  = u - u0;
             
