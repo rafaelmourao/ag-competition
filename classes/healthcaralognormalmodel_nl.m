@@ -63,6 +63,11 @@ classdef healthcaralognormalmodel_nl < model
             
             if (type.A > 0)
                 
+                if (type.A > 1e-2)
+                    type.A = 1e-2;
+                    warning('Type.A is too high, changing to 0.01')
+                end
+                
                 if (limits(1) < 0) % Integrals in the region of no loss
                     
                     % Calculate the probability of the loss being zero
