@@ -290,17 +290,15 @@ classdef healthcaralognormalmodel_nl < model
                 bounds(i, 2) = max(x.deductible-(1-x.coinsurance)*type.H/2,0);
                 bounds(i, 3) = max((x.oopMax-(1-x.coinsurance)*x.deductible)/x.coinsurance ...
                     - (2 - x.coinsurance) * type.H / 2, 0);
-                
-                if l < bounds(i, 1)
+                 
+                if (x.deductible == obj.publicInsuranceMaximum)
+                    u(i) = max(-l,-obj.publicInsuranceMaximum);
+                    payment(i) = min(l,obj.publicInsuranceMaximum);
                     expenditure(i) = l;
-                    if (x.deductible == obj.publicInsuranceMaximum)
-                        u(i) = max(-l,-obj.publicInsuranceMaximum);
-                        payment(i) = min(l,obj.publicInsuranceMaximum);
-                    else
-                        u(i) = -l;
-                        payment(i) = l;
-                    end
-                    
+                elseif l < bounds(i, 1)
+                    expenditure(i) = l;
+                    u(i) = -l;
+                    payment(i) = l;
                 elseif (l >= bounds(i, 2)) && (l <= bounds(i, 3))
                     u(i) = (1-x.coinsurance)^2*type.H/2 - (1-x.coinsurance)*x.deductible - x.coinsurance*l;
                     expenditure(i) = (1-x.coinsurance)*type.H + l;

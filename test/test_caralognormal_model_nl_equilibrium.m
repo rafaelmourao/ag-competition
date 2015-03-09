@@ -47,7 +47,7 @@ Model = healthcaralognormalmodel_nl( deductibleVector, ...
     coinsuranceVector, oopMaxVector, publicInsuranceMaximum, ...  
     typeDistributionMean, typeDistributionLogCovariance);
 
-if ~isempty(gcp)
+if ~isempty(gcp('nocreate'))
      delete(gcp)
 end
 
