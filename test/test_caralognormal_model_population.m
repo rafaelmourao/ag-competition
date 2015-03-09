@@ -60,22 +60,7 @@ for populationSize = [1e4 1e5 1e6]
             Population.findequilibrium(CalculationParametersEquilibrium);
         toc
         
-        results.(['p' num2str(populationSize)]).(['c' num2str(ncontracts)]).('t1')= ComputationOutputEquilibrium;
-        
-                tic
-        [pEquilibrium, DEquilibrium, ACEquilibrium, ComputationOutputEquilibrium] = ...
-            Population.findequilibrium2(CalculationParametersEquilibrium);
-        toc
-        
-        results.(['p' num2str(populationSize)]).(['c' num2str(ncontracts)]).('t2')= ComputationOutputEquilibrium;
-        
-                tic
-        [pEquilibrium, DEquilibrium, ACEquilibrium, ComputationOutputEquilibrium] = ...
-            Population.findequilibrium3(CalculationParametersEquilibrium);
-        toc
-        
-        results.(['p' num2str(populationSize)]).(['c' num2str(ncontracts)]).('t3')= ComputationOutputEquilibrium;
-        
+        results.(['p' num2str(populationSize)]).(['c' num2str(ncontracts)]).('t1')= ComputationOutputEquilibrium;        
         
         save test_population_results.mat results
     end

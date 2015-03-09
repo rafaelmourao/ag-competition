@@ -26,7 +26,7 @@ classdef population
         function Population = population(Model, n, nworkers)
             if ( nargin < 3 || (nworkers < 0) )
                 nworkers = 0;
-            end               
+            end
             n_Contracts = Model.nContracts;
             u_Matrix = zeros(n, Model.nContracts);
             c_Matrix = zeros(n, Model.nContracts);
@@ -55,72 +55,31 @@ classdef population
             % vectors. These are 1xnContracts sized vectors. Also outputs a
             % choiceVector which is populationSize x 1, and each entry
             % specifies the contract j chosen by consumer i.
-            surplus = Population.uMatrix - ...
-                repmat(p, Population.size, 1);
-            [maxSurplus, choiceVector] = max(surplus, [], 2);
-            % Getting the matrix indices for the maximum surpluses
-            choiceIndices = sub2ind(size(surplus),(1:Population.size)',choiceVector);
-            % Using histc to get the frequency of every contract choice
-            D = histc(choiceVector',1:Population.nContracts)/Population.size;
-            % Calculating the cost for each contract by using the
-            % matlab function accumarray, summing all expected costs 
-            % according to the  choice vector subscripts
-            TC = accumarray(choiceVector, Population.cMatrix(choiceIndices), ...
-                [Population.nContracts,1])'/Population.size;
-            if nargout > 2
-            CS = mean(maxSurplus);
-            end
-        end
-        
-        function [D, TC, CS, choiceVector] = demand2(Population, p)
-            % demand: Takes as input the population and a price vector.
-            % Outputs demand vector, total cost vector, and consumer suplus
-            % vectors. These are 1xnContracts sized vectors. Also outputs a
-            % choiceVector which is populationSize x 1, and each entry
-            % specifies the contract j chosen by consumer i.
-            surplus = Population.uMatrix - ...
-                repmat(p, Population.size, 1);
-            [maxSurplus, choiceVector] = max(surplus, [], 2);
-            % Getting the matrix indices for the maximum surpluses
-            % choiceIndices = sub2ind(size(surplus),(1:Population.size)',choiceVector)
-            % alternative, faster way:
-            choiceIndices =  (1:Population.size)' + (choiceVector-1)*Population.size;
-            % Using histc to get the frequency of every contract choice
-            D = histc(choiceVector',1:Population.nContracts)/Population.size;
-            % Calculating the cost for each contract by using the
-            % matlab function accumarray, summing all expected costs 
-            % according to the  choice vector subscripts
-            TC = accumarray(choiceVector, Population.cMatrix(choiceIndices), ...
-                [Population.nContracts,1])'/Population.size;
-            if nargout > 2
-            CS = mean(maxSurplus);
-            end
-        end
-        
-        function [D, TC, CS, choiceVector] = demand3(Population, p)
-            % demand: Takes as input the population and a price vector.
-            % Outputs demand vector, total cost vector, and consumer suplus
-            % vectors. These are 1xnContracts sized vectors. Also outputs a
-            % choiceVector which is populationSize x 1, and each entry
-            % specifies the contract j chosen by consumer i.
+            
+            % surplus = Population.uMatrix - repmat(p, Population.size, 1);
+            % Alternative way, faster for large populations:
             surplus = bsxfun(@minus,Population.uMatrix,p);
             [maxSurplus, choiceVector] = max(surplus, [], 2);
+            
             % Getting the matrix indices for the maximum surpluses
             % choiceIndices = sub2ind(size(surplus),(1:Population.size)',choiceVector)
             % alternative, faster way:
             choiceIndices =  (1:Population.size)' + (choiceVector-1)*Population.size;
+            
             % Using histc to get the frequency of every contract choice
             D = histc(choiceVector',1:Population.nContracts)/Population.size;
+            
             % Calculating the cost for each contract by using the
             % matlab function accumarray, summing all expected costs 
-            % according to the  choice vector subscripts
+            % according to the choice vector subscripts
             TC = accumarray(choiceVector, Population.cMatrix(choiceIndices), ...
                 [Population.nContracts,1])'/Population.size;
+            
             if nargout > 2
             CS = mean(maxSurplus);
             end
         end
-               
+                       
         function W = welfare(Population, p, costOfPublicFunds)
             [D, TC, CS, ~] = Population.demand(p);
             W = CS + (1+costOfPublicFunds).*(D * p' - sum(TC));
@@ -188,131 +147,7 @@ classdef population
             ComputationOutput.nIterations = nIterations;
             ComputationOutput.runTime     = toc;
         end
-        
-        function [p, D, AC, ComputationOutput] = findequilibrium2(Population, CalculationParameters)
-            % findequilibrium: Finds an equilibrium by iterating average cost. To make it
-            % numerically stable must move towards average cost only a
-            % small fraction of the way. Parameters:
-            % CalculationParameters.behavioralAgents,
-            % CalculationParameters.fudge (what fraction of the way you move towards average cost,
-            % 1 being the fastest and something close to 0 being more numerically stable,
-            % CalculationParameters.maxIterations, CalculationParameters.tolerance
-            % Output: price, demand, average cost and a ComputationOutput
-            % struct with fields .nIterations, .error (mean square distance
-            % between p and AC. Note that this number is often big even
-            % with a precise computation because it is driven by contracts
-            % taht are not traded. A good improvement would be having a
-            % better definition of error in each step of the algorithm),
-            % .runTime.
-            % This numerical method is pretty accurate for finding
-            % equilibrium prices within the range of contracts that are
-            % actually traded in equilibrium. The prices of contracts that
-            % are not traded are less stable. They become even less stable
-            % in a model with a lot of contracts. Note that the fudge
-            % factor has to be pretty low to compute things accurately
-            % because of the issue of contracts that are not traded. When a
-            % contract just starts being traded the AC curve can be very
-            % steep, and the algorithm will not converge. The behavioral
-            % agents attenuate this tendency, so a small number of
-            % behavioral agents make the numerics more finicky. The reason
-            % for using this method as opposed to something smarter that
-            % changes fudge factors etc based on the AC curves is that this
-            % is simple to implement, and typically works if we set the
-            % computational parameters conservatively. But there is a lot
-            % of room for improvement.
-            tic;
-            epsilon = CalculationParameters.behavioralAgents / Population.nContracts; % epsilon is the number of behavioral agents per contracts.
-            fudge   = CalculationParameters.fudge;
-            
-            error       = Inf;
-            nIterations = 0;
-            
-            function [p1, error] = iteration(p0)
-                [D, TC] = Population.demand2(p0);
-                AC            = TC ./ (D + epsilon);
-                error         = norm(AC - p0, Inf);
-                currentFudge  = fudge + 1.1^(-nIterations-1); % I made the fudge factor close to 1 in the first few iterations so that it moves fast in the beginning. But decreasing by 10% in each iteration so that it quickly gets to the value specified in the function call.
-                p1            = currentFudge*AC + (1-currentFudge)*p0;
-            end
-            
-            p = zeros(1, Population.nContracts);
-            while (error > CalculationParameters.tolerance) ...
-                    && (nIterations < CalculationParameters.maxIterations)
-                [p, error] = iteration(p);
-                % Require at least 50 iterations.
-                if (nIterations < 50)
-                    error = Inf;
-                end;
-                nIterations = nIterations + 1;
-            end;
-            
-            ComputationOutput.error       = error;
-            ComputationOutput.nIterations = nIterations;
-            ComputationOutput.runTime     = toc;
-        end
-        
-        function [p, D, AC, ComputationOutput] = findequilibrium3(Population, CalculationParameters)
-            % findequilibrium: Finds an equilibrium by iterating average cost. To make it
-            % numerically stable must move towards average cost only a
-            % small fraction of the way. Parameters:
-            % CalculationParameters.behavioralAgents,
-            % CalculationParameters.fudge (what fraction of the way you move towards average cost,
-            % 1 being the fastest and something close to 0 being more numerically stable,
-            % CalculationParameters.maxIterations, CalculationParameters.tolerance
-            % Output: price, demand, average cost and a ComputationOutput
-            % struct with fields .nIterations, .error (mean square distance
-            % between p and AC. Note that this number is often big even
-            % with a precise computation because it is driven by contracts
-            % taht are not traded. A good improvement would be having a
-            % better definition of error in each step of the algorithm),
-            % .runTime.
-            % This numerical method is pretty accurate for finding
-            % equilibrium prices within the range of contracts that are
-            % actually traded in equilibrium. The prices of contracts that
-            % are not traded are less stable. They become even less stable
-            % in a model with a lot of contracts. Note that the fudge
-            % factor has to be pretty low to compute things accurately
-            % because of the issue of contracts that are not traded. When a
-            % contract just starts being traded the AC curve can be very
-            % steep, and the algorithm will not converge. The behavioral
-            % agents attenuate this tendency, so a small number of
-            % behavioral agents make the numerics more finicky. The reason
-            % for using this method as opposed to something smarter that
-            % changes fudge factors etc based on the AC curves is that this
-            % is simple to implement, and typically works if we set the
-            % computational parameters conservatively. But there is a lot
-            % of room for improvement.
-            tic;
-            epsilon = CalculationParameters.behavioralAgents / Population.nContracts; % epsilon is the number of behavioral agents per contracts.
-            fudge   = CalculationParameters.fudge;
-            
-            error       = Inf;
-            nIterations = 0;
-            
-            function [p1, error] = iteration(p0)
-                [D, TC] = Population.demand3(p0);
-                AC            = TC ./ (D + epsilon);
-                error         = norm(AC - p0, Inf);
-                currentFudge  = fudge + 1.1^(-nIterations-1); % I made the fudge factor close to 1 in the first few iterations so that it moves fast in the beginning. But decreasing by 10% in each iteration so that it quickly gets to the value specified in the function call.
-                p1            = currentFudge*AC + (1-currentFudge)*p0;
-            end
-            
-            p = zeros(1, Population.nContracts);
-            while (error > CalculationParameters.tolerance) ...
-                    && (nIterations < CalculationParameters.maxIterations)
-                [p, error] = iteration(p);
-                % Require at least 50 iterations.
-                if (nIterations < 50)
-                    error = Inf;
-                end;
-                nIterations = nIterations + 1;
-            end;
-            
-            ComputationOutput.error       = error;
-            ComputationOutput.nIterations = nIterations;
-            ComputationOutput.runTime     = toc;
-        end
-        
+                
         function [p, W, ComputationOutput] = findefficient(Population, costOfPublicFunds, CalculationParameters)
             tic;
             % findefficient: This function finds an efficient allocation
