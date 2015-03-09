@@ -26,7 +26,7 @@ classdef population
         function Population = population(Model, n, nworkers)
             if ( nargin < 3 || (nworkers < 0) )
                 nworkers = 0;
-            end               
+            end
             n_Contracts = Model.nContracts;
             u_Matrix = zeros(n, Model.nContracts);
             c_Matrix = zeros(n, Model.nContracts);
@@ -55,23 +55,31 @@ classdef population
             % vectors. These are 1xnContracts sized vectors. Also outputs a
             % choiceVector which is populationSize x 1, and each entry
             % specifies the contract j chosen by consumer i.
-            surplus = Population.uMatrix - ...
-                repmat(p, Population.size, 1);
+            
+            % surplus = Population.uMatrix - repmat(p, Population.size, 1);
+            % Alternative way, faster for large populations:
+            surplus = bsxfun(@minus,Population.uMatrix,p);
             [maxSurplus, choiceVector] = max(surplus, [], 2);
+            
             % Getting the matrix indices for the maximum surpluses
-            choiceIndices = sub2ind(size(surplus),(1:Population.size)',choiceVector);
+            % choiceIndices = sub2ind(size(surplus),(1:Population.size)',choiceVector)
+            % alternative, faster way:
+            choiceIndices =  (1:Population.size)' + (choiceVector-1)*Population.size;
+            
             % Using histc to get the frequency of every contract choice
             D = histc(choiceVector',1:Population.nContracts)/Population.size;
+            
             % Calculating the cost for each contract by using the
             % matlab function accumarray, summing all expected costs 
-            % according to the  choice vector subscripts
+            % according to the choice vector subscripts
             TC = accumarray(choiceVector, Population.cMatrix(choiceIndices), ...
                 [Population.nContracts,1])'/Population.size;
+            
             if nargout > 2
             CS = mean(maxSurplus);
             end
         end
-               
+                       
         function W = welfare(Population, p, costOfPublicFunds)
             [D, TC, CS, ~] = Population.demand(p);
             W = CS + (1+costOfPublicFunds).*(D * p' - sum(TC));
@@ -139,7 +147,7 @@ classdef population
             ComputationOutput.nIterations = nIterations;
             ComputationOutput.runTime     = toc;
         end
-        
+                
         function [p, W, ComputationOutput] = findefficient(Population, costOfPublicFunds, CalculationParameters)
             tic;
             % findefficient: This function finds an efficient allocation
@@ -255,7 +263,6 @@ classdef population
                 plot(qVector(I), MCVector(I) , 'green');
             end;
         end;
-        
     end
     
 end
