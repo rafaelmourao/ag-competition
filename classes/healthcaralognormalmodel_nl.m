@@ -125,15 +125,18 @@ classdef healthcaralognormalmodel_nl < model
                 end
             end
             
-            %             if ( (u0 - u)/abs(u) > 1e-6 )
-            %                 disp(type)
-            %                 disp(x)
-            %                 fprintf('Utility with insurance: %.8f\n',u)
-            %                 fprintf('Utility without insurance: %.8f\n',u0)
-            %                 error('Utility without insurance cannot be higher than with it')
-            %             end
+            if ( (u0 - u)/abs(u) > 1e-6 )
+                fprintf('Utility with insurance: %.8f\n',u)
+                fprintf('Utility without insurance: %.8f\n',u0)
+                error('Utility without insurance cannot be higher than with it')
+            end
             
             u  = u - u0;
+            
+            if ( u > obj.publicInsuranceMaximum + type.H / 2 )
+                u = obj.publicInsuranceMaximum + type.H / 2;
+                warning('Impossible value, setting u = publicInsuranceMaximum + type.H / 2')
+            end
             
         end
         
