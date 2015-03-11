@@ -157,12 +157,13 @@ display('Test uFunction and cFunction');
     
 %% Adding risk aversion.
 %{
-Now let's make S and A nontrivial, I set it to $10,000 and then $30,000.
+Now let's make S and A nontrivial, I set S to $10,000 and then $30,000.
 To see if we are
 calculating things properly with risk. The previous tests suggest we are
 doing well ex post, this one is for ex ante.
 %}
 close all;
+display('Now look at agents with larger standard deviation of losses.');
 type.A = 1.5.*10^(-3);
 
 display('Contract');
@@ -193,6 +194,7 @@ with risk aversion.
 %}
 close all;
 
+display('Now test varying risk aversion. No output, just graphs.');
 display('Contract');
 display(x);
 
@@ -206,7 +208,6 @@ cVector = zeros(nRiskAversionGrid, 1);
 
 for i = 1:nRiskAversionGrid
     type.A     = riskAversionGrid(i);
-    display(type.A);
     uVector(i) = Model.uFunction(x, type);
     cVector(i) = Model.cFunction(x, type);
 end;
@@ -227,6 +228,8 @@ aversion. Losses are small enough that the public insurance issue is not
 relevant.
 %}
 close all;
+
+display('Now test varying risk aversion in the approximately linear case. No output, just graphs.');
 
 display('Contract');
 x.deductible  =  0;
