@@ -31,13 +31,15 @@ classdef population
             u_Matrix = zeros(n, Model.nContracts);
             c_Matrix = zeros(n, Model.nContracts);
             type_List = cell(1,n);
+            % For reproducibility, generate types outside of parfor loop
+            for i = 1:n
+                type_List{i} = typeDistribution(Model);
+            end
             parfor(i = 1 : n, nworkers)
-                type = typeDistribution(Model);
-                type_List{i} = type;
                 for j = 1 : n_Contracts
                     x = Model.contracts{j};
-                    u_Matrix(i, j) = Model.uFunction(x, type);
-                    c_Matrix(i, j) = Model.cFunction(x, type);
+                    u_Matrix(i, j) = Model.uFunction(x, type_List{i});
+                    c_Matrix(i, j) = Model.cFunction(x, type_List{i});
                 end
             end
             Population.uMatrix    = u_Matrix;
