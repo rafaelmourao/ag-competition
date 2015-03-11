@@ -186,8 +186,19 @@ classdef healthcaralognormalmodel_nl < model
             
             Type.A = v(1);
             Type.H = v(2);
-            Type.M = v(3);
-            Type.S = v(4);
+            Type.M_real = v(3);
+            Type.S_real = v(4);
+            
+            Psi = @(x) normcdf(0,x(1),x(2));
+            psi = @(x) normpdf(0,x(1),x(2));
+            mills = @(x) psi(x)/(1-Psi(x));
+            system = @(x) [ (1-Psi(x))*(x(1)+x(2)*mills(x)) - Type.M_real, ...
+                x(2)^2*(1-Psi(x))*(1 - mills(x)^2 * ( 1 + Psi(x) ) ) - Type.S_real^2 ];
+            
+            x = lsqnonlin(system,[0 1],[0,0]);
+            
+            Type.M = x(1);
+            Type.S = x(2);
             
             function v = ...
                     lognrndfrommoments(meanVector, logCovMatrix, varargin)
