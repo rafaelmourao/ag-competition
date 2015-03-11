@@ -63,10 +63,15 @@ classdef healthcaralognormalmodel_nl < model
             
             if (type.A > 0)
                 
-                if (type.A > 1e-2)
-                    type.A = 1e-2;
-                    warning('Type.A is too high, changing to 0.01')
-                end
+                %                 if (type.A > 1e-2)
+                %                     type.A = 1e-2;
+                %                     warning('Type.A is too high, changing to 0.01')
+                %                 end
+                
+                [~, K] = fminbnd( @(x) - log( lossDistributionFunction(obj, type, x))...
+                    + type.A * exPostUtility(obj, obj.nullContract, type, x), 0, limits(2) - 1 );
+                
+                K = -K;
                 
                 if (limits(1) < 0) % Integrals in the region of no loss
                     
@@ -75,38 +80,40 @@ classdef healthcaralognormalmodel_nl < model
                     p_0 = integral(@(x) lossDistributionFunction(obj, type, x), ...
                         limits(1), min(limits(2),0), 'AbsTol', 1e-15,'RelTol',1e-12 );
                     
-                    u = p_0 * exp(-type.A * uEx_0);
+                    u = p_0 * exp(-type.A * uEx_0 - K);
                     
                     % In case of no insurance, ex post utility is zero
                     
-                    u0 = p_0;
+                    u0 = p_0 * exp(-K);
                     
                 end
                 
                 if (limits(2) > 0)
                     
-                    u = u + integral(@(l) exp(-type.A*exPostUtility(obj, x, type, l)) .*...
-                        lossDistributionFunction(obj, type, l), max(limits(1),0), limits(2),...
+                    u = u + integral(@(l) exp(-type.A*exPostUtility(obj, x, type, l) + ...
+                        log(lossDistributionFunction(obj, type, l)) - K), ...
+                        max(limits(1),0), limits(2),...
                         'AbsTol', 1e-15,'RelTol',1e-12,'WayPoints',bounds(isfinite(bounds)));
                     
                     u0 = u0 + integral(@(l) exp(-type.A * ...
-                        exPostUtility(obj, obj.nullContract, type, l)) .*...
-                        lossDistributionFunction(obj, type, l), max(limits(1),0), limits(2),...
+                        exPostUtility(obj, obj.nullContract, type, l) +...
+                        log(lossDistributionFunction(obj, type, l)) - K), ...
+                        max(limits(1),0), limits(2),...
                         'AbsTol', 1e-15,'RelTol',1e-12,'WayPoints',bounds(isfinite(bounds)));
                     
                 end
                 
-                u = -log(u)/type.A;
-                u0 = -log(u0)/type.A;
+                u = -( log(u) + K )/type.A;
+                u0 = -( log(u0) + K )/type.A;
                 
-            else
+            else % In the case of risk neutrality
                 
                 if (limits(1) < 0)
                     
                     p_0 = integral(@(x) lossDistributionFunction(obj, type, x), ...
                         limits(1), min(limits(2),0), 'AbsTol', 1e-15,'RelTol',1e-12 );
                     
-                    u = p_0 * exp(-type.A * uEx_0);
+                    u = p_0 * uEx_0;
                     
                     u0 = p_0;
                     
@@ -290,7 +297,7 @@ classdef healthcaralognormalmodel_nl < model
                 bounds(i, 2) = max(x.deductible-(1-x.coinsurance)*type.H/2,0);
                 bounds(i, 3) = max((x.oopMax-(1-x.coinsurance)*x.deductible)/x.coinsurance ...
                     - (2 - x.coinsurance) * type.H / 2, 0);
-                 
+                
                 if (x.deductible == obj.publicInsuranceMaximum)
                     u(i) = max(-l,-obj.publicInsuranceMaximum);
                     payment(i) = min(l,obj.publicInsuranceMaximum);
