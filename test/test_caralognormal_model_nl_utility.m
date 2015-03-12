@@ -37,16 +37,6 @@ Model = healthcaralognormalmodel_nl( deductibleVector, ...
     coinsuranceVector, oopMaxVector, publicInsuranceMaximum, ...  
     typeDistributionMean, typeDistributionLogCovariance);
 
-%% Test for the means and variance of individuals
-
-for i = 1:5
-    Type = Model.typeDistribution
-    x = normrnd(Type.M,Type.S,1e6,1);
-    x(x<0)=0;
-    fprintf('Mean %.6f, Real %.6f\n',mean(x),Type.MReal)
-    fprintf('Standard Deviation %.6f, Real %.6f\n',std(x),Type.SReal)
-end
-
 %% Consumer with no moral hazard and small distribution of losses
 %{
 This agent has no moral hazard, and always loses about $3,000. So he ends
