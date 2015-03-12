@@ -186,16 +186,20 @@ classdef healthcaralognormalmodel_nl < model
             
             Type.A = v(1);
             Type.H = v(2);
-            Type.M_real = v(3);
-            Type.S_real = v(4);
+            Type.MReal = v(3);
+            Type.SReal = v(4);
             
             Psi = @(x) normcdf(0,x(1),x(2));
             psi = @(x) normpdf(0,x(1),x(2));
             mills = @(x) psi(x)/(1-Psi(x));
-            system = @(x) [ (1-Psi(x))*(x(1)+x(2)*mills(x)) - Type.M_real, ...
-                x(2)^2*(1-Psi(x))*(1 - mills(x)^2 * ( 1 + Psi(x) ) ) - Type.S_real^2 ];
+            alpha = @(x) -x(1)/x(2);
             
-            x = lsqnonlin(system,[0 1],[0,0]);
+            system = @(x) [ (1-Psi(x))*x(1) + x(2)*psi(x) - Type.MReal , ...
+                x(2)^2 * (1-Psi(x)) *( 1 - mills(x)^2 + mills(x)*alpha(x) ...
+                + (alpha(x) - mills(x))^2 * Psi(x) ) - Type.SReal^2 ];
+            
+            options = optimset('MaxFunEvals',1000);
+            [x y] = simulannealbnd(@(x) sum(abs(system(x))),[Type.MReal Type.SReal],[0,Type.SReal],[Type.MReal Inf])
             
             Type.M = x(1);
             Type.S = x(2);
