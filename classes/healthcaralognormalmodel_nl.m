@@ -189,6 +189,15 @@ classdef healthcaralognormalmodel_nl < model
             Type.M = v(3);
             Type.S = v(4);
             
+            [Type.logNormalM, Type.logNormalS] = ...
+            lognormal_parameters(Type.M,Type.S);
+            
+            function [mu, sigma] = lognormal_parameters(M, S)
+            sigma = log( 1 + (S./M).^2 );
+            sigma = sqrt(sigma);
+            mu    = log(M) - sigma.^2 / 2;
+            end
+            
             function v = ...
                     lognrndfrommoments(meanVector, logCovMatrix, varargin)
                 %   estimate_lognormal_from_moments Estimate lognormal parameters
@@ -232,8 +241,10 @@ classdef healthcaralognormalmodel_nl < model
             % check to see if integrating the density between these points
             % results in 1
             
-            limits(1) = findCloserZero(type.M,1e6,tol);
-            limits(2) = findCloserZero(type.M,-1e6,tol);
+            limits(1) = 0;
+            limits(2) = 1e8;
+%             limits(1) = findCloserZero(type.M,1e6,tol);
+%             limits(2) = findCloserZero(type.M,-1e6,tol);
             
             integralCheck = integral(@(l)...
                 lossDistributionFunction(obj, type, l), ...
