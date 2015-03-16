@@ -37,8 +37,6 @@ Model = healthcaralognormalmodel_nl( deductibleVector, ...
     coinsuranceVector, oopMaxVector, publicInsuranceMaximum, ...  
     typeDistributionMean, typeDistributionLogCovariance);
 
-type = Model.typeDistribution
-
 %% Consumer with no moral hazard and small distribution of losses
 %{
 This agent has no moral hazard, and always loses about $3,000. So he ends
