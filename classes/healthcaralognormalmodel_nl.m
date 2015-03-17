@@ -5,11 +5,11 @@ classdef healthcaralognormalmodel_nl < model
     %   distributed types, and contracts are parametrized by three elements
     %   as in Einav et al. (2013). Inputs to the constructor:
     %   deductibleVector is a vector of deductibles, coinsuranceVector is a
-    %   vector of coinsurance shares, oopMaxVector is a vector with out of 
-    %   pocket maximum values, publicInsuranceMaximum is the maximum of 
-    %   losses an uninsured individual must cover before public insurance 
-    %   public insurance covers the rest, parameterMean is a 4 dimensional 
-    %   vector of means of parameters and parameterLogVariance is a 4x4 
+    %   vector of coinsurance shares, oopMaxVector is a vector with out of
+    %   pocket maximum values, publicInsuranceMaximum is the maximum of
+    %   losses an uninsured individual must cover before public insurance
+    %   public insurance covers the rest, parameterMean is a 4 dimensional
+    %   vector of means of parameters and parameterLogVariance is a 4x4
     %   matrix of log covariances.
     %   Parameters are ordered as A, H, M, S as in the Azevedo and Gottlieb
     %   paper (absolute risk aversion A, moral hazard H, mean loss M,
@@ -78,7 +78,7 @@ classdef healthcaralognormalmodel_nl < model
                 
                 u0 = logExpectedExponentialValue( obj, @(l) -type.A*...
                     exPostUtility(obj, obj.nullContract, type, l), ...
-                    obj.nullContract, type  );
+                    obj.nullContract, type );
                 
                 u = - u / type.A;
                 u0 = - u0 / type.A;
@@ -126,15 +126,25 @@ classdef healthcaralognormalmodel_nl < model
             
         end
         
-        function Type = typeDistribution(obj)
+        function e = eFunction(obj, contract, type)
+            
+            % Checking contract
+            checkContract(obj, contract);
+            
+            e = expectedValue( obj, @(l) ...
+                exPostExpenditure(obj, contract, type, l), contract, type );
+            
+        end
+        
+        function type = typeDistribution(obj)
             
             v = lognrndfrommoments(...
                 obj.typeDistributionMean, obj.typeDistributionLogCovariance, 1);
             
-            Type.A = v(1);
-            Type.H = v(2);
-            Type.M = v(3);
-            Type.S = v(4);
+            type.A = v(1);
+            type.H = v(2);
+            type.M = v(3);
+            type.S = v(4);
             
             function v = ...
                     lognrndfrommoments(meanVector, logCovMatrix, varargin)
@@ -161,15 +171,50 @@ classdef healthcaralognormalmodel_nl < model
             
         end
         
-        function [cost, bounds] = exPostCost(obj, contract, type, losses)
+        function mcoverage = meanCoverage(obj, contract)
+            
+            meantype.A = obj.typeDistributionMean(1);
+            meantype.H = obj.typeDistributionMean(2);
+            meantype.M = obj.typeDistributionMean(3);
+            meantype.S = obj.typeDistributionMean(4);
+            
+            mexpenditure = eFunction(obj, contract, meantype);
+            
+            if (contract.deductible == obj.publicInsuranceMaximum)
+                
+                mcost = expectedValue( obj, @(l) ...
+                    (l>obj.publicInsuranceMaximum).*(l-obj.publicInsuranceMaximum),...
+                    contract, meantype );
+                
+            else
+                
+                mcost = cFunction(obj, contract, meantype);
+                
+            end
+            
+            mcoverage = mcost/mexpenditure;
+            
+        end
+        
+        function expenditure = exPostExpenditure(obj, contract, type, losses)
+            
+            if (contract.deductible == obj.publicInsuranceMaximum)
+                expenditure = losses;
+            else
+                [~, expenditure] = exPostUtility(obj, contract, type, losses);
+            end
+            
+        end
+        
+        function cost = exPostCost(obj, contract, type, losses)
             
             if (contract.deductible == obj.publicInsuranceMaximum)
                 cost = 0;
-                bounds = 0;
             else
-                [~, expenditure, payment, bounds] = exPostUtility(obj, contract, type, losses);
+                [~, expenditure, payment] = exPostUtility(obj, contract, type, losses);
                 cost = expenditure - payment;
             end
+            
         end
         
         function [u, expenditure, payment, bounds] = exPostUtility(obj, contract, type, losses)
@@ -211,7 +256,7 @@ classdef healthcaralognormalmodel_nl < model
                         
                         u(i) = (1-contract.coinsurance)^2*type.H/2 - (1-contract.coinsurance)*contract.deductible - contract.coinsurance*l;
                         expenditure(i) = (1-contract.coinsurance)*type.H + l;
-                        payment(i) = contract.deductible + (1-contract.coinsurance)*(expenditure(i)-contract.deductible);
+                        payment(i) = contract.deductible + contract.coinsurance*(expenditure(i)-contract.deductible);
                         
                     else
                         
@@ -273,12 +318,14 @@ classdef healthcaralognormalmodel_nl < model
                 K = 0;
             end
             
-            x = leftIntegral(obj,  @(l) exp( function_handle(l) - K ), contract, type, limits );
+            x = leftIntegral(obj,  @(l) exp( function_handle(l) - K ), ...
+                contract, type, limits );
             
             x = x + innerIntegral (obj, @(l) exp( log( lossPDF(obj, type, l) ) ...
                 + function_handle(l) - K), contract, type, limits, oopMaxLoss );
             
-            x = x + rightIntegral( obj,@(l) exp( function_handle(l) - K ), contract, type, limits, oopMaxLoss );
+            x = x + rightIntegral( obj,@(l) exp( function_handle(l) - K ),...
+                contract, type, limits, oopMaxLoss );
             
             x = log(x) + K;
             
@@ -294,7 +341,8 @@ classdef healthcaralognormalmodel_nl < model
             x = x + innerIntegral (obj, @(l) lossPDF(obj, type, l)...
                 .* function_handle(l), contract, type, limits, oopMaxLoss );
             
-            x = x + rightIntegral(obj, @(l) function_handle(l), contract, type, limits, oopMaxLoss );
+            x = x + rightIntegral(obj, @(l) function_handle(l), contract,...
+                type, limits, oopMaxLoss );
             
         end
         
@@ -388,5 +436,6 @@ classdef healthcaralognormalmodel_nl < model
             end
         end
     end
+    
 end
 
