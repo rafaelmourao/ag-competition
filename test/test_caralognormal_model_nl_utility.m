@@ -51,10 +51,10 @@ a slope of 0.5, and then be constant once the oop maximum of $1,000 is
 reached, which happens at a loss of $1,900.
 %}
 close all;
-x.deductible  = 100;
-x.coinsurance = 0.5;
-x.oopMax      = 1000;
-x.name        = 'test';
+contract.deductible  = 100;
+contract.coinsurance = 0.5;
+contract.oopMax      = 1000;
+contract.name        = 'test';
 
 type.A = 1e-5;
 type.H = 0;
@@ -62,7 +62,7 @@ type.M = 3000;
 type.S = 10;
 
 display('Contract');
-display(x);
+display(contract);
 display('Agent type: this consumer has a loss of approximately 3,000 and no moral hazard');
 display(type);
 
@@ -72,7 +72,7 @@ display('Test exPostUtility');
     uExPost = zeros(1, nGrid);
     eExPost = zeros(1, nGrid);
     for i = 1:nGrid
-        [uExPost(i), eExPost(i), limits] = Model.exPostUtility(x, type, lossGrid(i));
+        [uExPost(i), eExPost(i), limits] = Model.exPostUtility(contract, type, lossGrid(i));
     end;
     display(uExPost);
     display(eExPost);
@@ -87,8 +87,8 @@ display('Test exPostUtility');
     title('Ex post utility vs. loss')
 
 display('Test uFunction and cFunction');
-    u    = Model.uFunction(x, type);
-    c    = Model.cFunction(x, type);
+    u    = Model.uFunction(contract, type);
+    c    = Model.cFunction(contract, type);
     display(u);
     display(c);
     
@@ -126,7 +126,7 @@ close all;
 type.H = 1000;
 
 display('Contract');
-display(x);
+display(contract);
 display('Agent type: this consumer has a loss of approximately 3,000, but now moral hazard of $1,000');
 display(type);
 
@@ -136,7 +136,7 @@ display('Test exPostUtility');
     uExPost = zeros(1, nGrid);
     eExPost = zeros(1, nGrid);
     for i = 1:nGrid
-        [uExPost(i), eExPost(i), limits] = Model.exPostUtility(x, type, lossGrid(i));
+        [uExPost(i), eExPost(i), limits] = Model.exPostUtility(contract, type, lossGrid(i));
     end;
     display(uExPost);
     display(eExPost);
@@ -150,8 +150,8 @@ display('Test exPostUtility');
     title('Ex post utility vs. loss')
 
 display('Test uFunction and cFunction');
-    u    = Model.uFunction(x, type);
-    c    = Model.cFunction(x, type);
+    u    = Model.uFunction(contract, type);
+    c    = Model.cFunction(contract, type);
     display(u);
     display(c);
     
@@ -167,7 +167,7 @@ display('Now look at agents with larger standard deviation of losses.');
 type.A = 1.5.*10^(-3);
 
 display('Contract');
-display(x);
+display(contract);
 
 for i = 1:2
     if i == 1
@@ -180,8 +180,8 @@ for i = 1:2
     display(type);
 
     display('Test uFunction and cFunction');
-        u    = Model.uFunction(x, type);
-        c    = Model.cFunction(x, type);
+        u    = Model.uFunction(contract, type);
+        c    = Model.cFunction(contract, type);
         display(u);
         display(c);
 end;
@@ -196,7 +196,7 @@ close all;
 
 display('Now test varying risk aversion. No output, just graphs.');
 display('Contract');
-display(x);
+display(contract);
 
 nRiskAversionGrid   = 10;
 minRiskAversionGrid = 10^(-3);
@@ -208,8 +208,8 @@ cVector = zeros(nRiskAversionGrid, 1);
 
 for i = 1:nRiskAversionGrid
     type.A     = riskAversionGrid(i);
-    uVector(i) = Model.uFunction(x, type);
-    cVector(i) = Model.cFunction(x, type);
+    uVector(i) = Model.uFunction(contract, type);
+    cVector(i) = Model.cFunction(contract, type);
 end;
 
 figure();
@@ -232,10 +232,10 @@ close all;
 display('Now test varying risk aversion in the approximately linear case. No output, just graphs.');
 
 display('Contract');
-x.deductible  =  0;
-x.coinsurance = 0.5;
-x.oopMax      = 30000;
-display(x);
+contract.deductible  =  0;
+contract.coinsurance = 0.5;
+contract.oopMax      = 30000;
+display(contract);
 
 type.S = 200;
 type.H = 0;
@@ -250,16 +250,16 @@ riskAversionGrid    = ...
 uVector = zeros(nRiskAversionGrid, 1);
 cVector = zeros(nRiskAversionGrid, 1);
 
-uBenchmark = (1 - x.coinsurance)^2 / 2 .* type.H ...
-    + (1 - x.coinsurance) .* type.M ...
-    + 0.5 .* (1 - x.coinsurance) .* (1 + x.coinsurance) ...
+uBenchmark = (1 - contract.coinsurance)^2 / 2 .* type.H ...
+    + (1 - contract.coinsurance) .* type.M ...
+    + 0.5 .* (1 - contract.coinsurance) .* (1 + contract.coinsurance) ...
     .* type.S .^ 2 ...
     .* riskAversionGrid;
 
 for i = 1:nRiskAversionGrid
     type.A     = riskAversionGrid(i);
-    uVector(i) = Model.uFunction(x, type);
-    cVector(i) = Model.cFunction(x, type);
+    uVector(i) = Model.uFunction(contract, type);
+    cVector(i) = Model.cFunction(contract, type);
 end;
 
 figure();
