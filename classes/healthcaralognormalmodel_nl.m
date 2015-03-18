@@ -1,13 +1,16 @@
 classdef healthcaralognormalmodel_nl < model
     %   healthcaralognormalmodel_nl Creates a health insurance model as in
     %   the Azevedo and Gottlieb paper. Subclass of the model class.
-    %   This model has CARA preferences, normal losses, lognormally
+    %   This model has CARA preferences, lognormal losses, lognormally
     %   distributed types, and contracts are parametrized by three elements
     %   as in Einav et al. (2013). Inputs to the constructor:
-    %   deductibleVector is a vector of deductibles, coinsuranceVector is a vector
-    %   of coinsurance shares, oopVector is a vector with out of pocket maximum
-    %   values, parameterMean is a 4 dimensional vector of means of parameters
-    %   and parameterLogVariance is a 4x4 matrix of log covariances.
+    %   deductibleVector is a vector of deductibles, coinsuranceVector is a
+    %   vector of coinsurance shares, oopMaxVector is a vector with out of
+    %   pocket maximum values, publicInsuranceMaximum is the maximum of
+    %   losses an uninsured individual must cover before public insurance
+    %   public insurance covers the rest, parameterMean is a 4 dimensional
+    %   vector of means of parameters and parameterLogVariance is a 4x4
+    %   matrix of log covariances.
     %   Parameters are ordered as A, H, M, S as in the Azevedo and Gottlieb
     %   paper (absolute risk aversion A, moral hazard H, mean loss M,
     %   and standard deviation of losses S).
@@ -19,8 +22,8 @@ classdef healthcaralognormalmodel_nl < model
         typeDistributionLogCovariance
     end
     
-    methods
-        % Constructor
+    methods ( Access = public, Hidden = false ) % Public methods
+        
         function obj = healthcaralognormalmodel_nl(deductibleVector, ...
                 coinsuranceVector, oopMaxVector, publicInsuranceMaximum, ...
                 typeDistributionMean, typeDistributionLogCovariance)
@@ -29,11 +32,11 @@ classdef healthcaralognormalmodel_nl < model
             obj.typeDistributionLogCovariance = typeDistributionLogCovariance;
             n = length(deductibleVector);
             for i = 1:n
-                x.deductible       = deductibleVector(i) ;
-                x.coinsurance      = coinsuranceVector(i) ;
-                x.oopMax           = oopMaxVector(i) ;
-                x.name             = num2str(i);
-                obj.contracts{i} = x;
+                contract.deductible       = deductibleVector(i) ;
+                contract.coinsurance      = coinsuranceVector(i) ;
+                contract.oopMax           = oopMaxVector(i) ;
+                contract.name             = num2str(i);
+                obj.contracts{i} = contract;
             end;
             
             obj.publicInsuranceMaximum   = publicInsuranceMaximum;
@@ -43,91 +46,52 @@ classdef healthcaralognormalmodel_nl < model
             obj.nullContract.name        = 'Null Contract';
         end
         
-        function u = uFunction(obj, x, type)
+        function x = lossPDF(~, type, l)
+            % Probability distribution function for the losses
+            sigma = sqrt( log( 1 + (type.S./type.M).^2 ) );
+            mu    = log(type.M) - sigma.^2 / 2;
+            x = lognpdf(l, mu, sigma);
+        end
+        
+        function x = lossCDF(~, type, l)
+            % Cumulative distribution function for the losses
+            sigma = sqrt( log( 1 + (type.S./type.M).^2 ) );
+            mu    = log(type.M) - sigma.^2 / 2;
+            x = logncdf(l, mu, sigma);
+        end
+        
+        function u = uFunction(obj, contract, type)
             
             % Checking contract
-            checkContract(obj, x);
+            checkContract(obj, contract);
             
             % If contract is null, then return zero
-            if (x.deductible == obj.publicInsuranceMaximum)
+            if (contract.deductible == obj.publicInsuranceMaximum)
                 u = 0;
                 return
             end
             
-            % Calculate ex post utility in case of no losses
-            [uEx_0, ~, ~, bounds] = exPostUtility(obj, x, type, 0);
-            % Calculate limit of integration for the expectation
-            limits = integrationLimits(obj, type, 1e-2);
-            u0 = 0; % Willingness to pay with no insurance
-            u = 0; % With insurance
-            
             if (type.A > 0)
                 
-                [~, K] = fminbnd( @(l) - log( lossDistributionFunction(obj, type, l))...
-                    + type.A * exPostUtility(obj, x, type, l), 0, limits(2) - 1 );
-                K = -K;
+                u = logExpectedExponentialValue( obj, @(l) -type.A*...
+                    exPostUtility(obj, contract, type, l),  contract, type );
                 
-                [~, K0] = fminbnd( @(l) - log( lossDistributionFunction(obj, type, l))...
-                    + type.A * exPostUtility(obj, obj.nullContract, type, l), 0, limits(2) - 1 );
-                K0 = -K0;
+                u0 = logExpectedExponentialValue( obj, @(l) -type.A*...
+                    exPostUtility(obj, obj.nullContract, type, l), ...
+                    obj.nullContract, type );
                 
-                if (limits(1) < 0) % Integrals in the region of no loss
-                    
-                    % Calculate the probability of the loss being zero
-                    
-                    p_0 = integral(@(l) lossDistributionFunction(obj, type, l), ...
-                        limits(1), min(limits(2),0), 'AbsTol', 1e-15,'RelTol',1e-12 );
-                    
-                    u = p_0 * exp(-type.A * uEx_0 - K);
-                    
-                    % In case of no insurance, ex post utility is zero
-                    
-                    u0 = p_0 * exp(-K0);
-                    
-                end
+                u = - u / type.A;
+                u0 = - u0 / type.A;
                 
-                if (limits(2) > 0)
-                    
-                    u = u + integral(@(l) exp(-type.A*exPostUtility(obj, x, type, l) + ...
-                        log(lossDistributionFunction(obj, type, l)) - K), ...
-                        max(limits(1),0), limits(2),...
-                        'AbsTol', 1e-15,'RelTol',1e-12,'WayPoints',bounds(isfinite(bounds)));
-                    
-                    u0 = u0 + integral(@(l) exp(-type.A * ...
-                        exPostUtility(obj, obj.nullContract, type, l) +...
-                        log(lossDistributionFunction(obj, type, l)) - K0), ...
-                        max(limits(1),0), limits(2),...
-                        'AbsTol', 1e-15,'RelTol',1e-12,'WayPoints',bounds(isfinite(bounds)));
-                    
-                end
+            else
                 
-                u = -( log(u) + K )/type.A;
-                u0 = -( log(u0) + K0 )/type.A;
+                u = expectedValue( obj, @(l) ...
+                    exPostUtility(obj, contract, type, l),  contract, type );
                 
-            else % In the case of risk neutrality
+                u0 = expectedValue( obj, @(l) ...
+                    exPostUtility(obj, obj.nullContract, type, l), ...
+                    obj.nullContract, type );
                 
-                if (limits(1) < 0)
-                    
-                    p_0 = integral(@(l) lossDistributionFunction(obj, type, l), ...
-                        limits(1), min(limits(2),0), 'AbsTol', 1e-15,'RelTol',1e-12 );
-                    
-                    u = p_0 * uEx_0;
-                    
-                    u0 = p_0;
-                    
-                end
-                
-                if (limits(2) > 0)
-                    
-                    u = u + integral(@(l) exPostUtility(obj, x, type, l) .*...
-                        lossDistributionFunction(obj, type, l), max(limits(1),0), limits(2),...
-                        'AbsTol', 1e-15,'RelTol',1e-12,'WayPoints',bounds(isfinite(bounds)));
-                    
-                    u0 = u0 + integral(@(l) exPostUtility(obj, obj.nullContract, type, l) .*...
-                        lossDistributionFunction(obj, type, l), max(limits(1),0), limits(2),...
-                        'AbsTol', 1e-15,'RelTol',1e-12,'WayPoints',bounds(isfinite(bounds)));
-                    
-                end
             end
             
             if ( (u0 - u)/abs(u) > 1e-6 )
@@ -145,49 +109,42 @@ classdef healthcaralognormalmodel_nl < model
             
         end
         
-        function c = cFunction(obj, x, type)
+        function c = cFunction(obj, contract, type)
             
             % Checking contract
-            checkContract(obj, x);
+            checkContract(obj, contract);
             
             % If contract is null, then return zero cost
             
-            if (x.deductible == obj.publicInsuranceMaximum)
+            if (contract.deductible == obj.publicInsuranceMaximum)
                 c = 0;
                 return
             end
             
-            [c0, bounds] = exPostCost(obj, x, type, 0);
-            limits = integrationLimits(obj, type, 1e-2);
-            c = 0;
-            
-            if (limits(1) < 0)
-                
-                c = integral(@(l) lossDistributionFunction(obj,type,l), ...
-                    limits(1),max(0,limits(2)),...
-                    'AbsTol', 1e-15,'RelTol',1e-12)*c0;
-                
-            end
-            
-            if (limits(2) > 0)
-                
-                c = c + integral(@(l) exPostCost(obj, x, type, l).*...
-                    lossDistributionFunction(obj, type, l),max(0,limits(1)),limits(2),...
-                    'AbsTol', 1e-15,'RelTol',1e-12,'WayPoints',bounds(isfinite(bounds)));
-                
-            end
+            c = expectedValue( obj, @(l) ...
+                exPostCost(obj, contract, type, l), contract, type );
             
         end
         
-        function Type = typeDistribution(obj)
+        function e = eFunction(obj, contract, type)
+            
+            % Checking contract
+            checkContract(obj, contract);
+            
+            e = expectedValue( obj, @(l) ...
+                exPostExpenditure(obj, contract, type, l), contract, type );
+            
+        end
+        
+        function type = typeDistribution(obj)
             
             v = lognrndfrommoments(...
                 obj.typeDistributionMean, obj.typeDistributionLogCovariance, 1);
             
-            Type.A = v(1);
-            Type.H = v(2);
-            Type.M = v(3);
-            Type.S = v(4);
+            type.A = v(1);
+            type.H = v(2);
+            type.M = v(3);
+            type.S = v(4);
             
             function v = ...
                     lognrndfrommoments(meanVector, logCovMatrix, varargin)
@@ -214,70 +171,53 @@ classdef healthcaralognormalmodel_nl < model
             
         end
         
-        function checkContract(obj, x)
-            if ( x.coinsurance < 0 || x.coinsurance > 1 )
-                error('Coinsurance must be between zero and one')
-            elseif ( x.deductible > x.oopMax || x.deductible < 0 )
-                error(['Deductible must be higher than zero, and lower than'...
-                    ' the out of pocket maximum'])
-            elseif ( x.oopMax > obj.publicInsuranceMaximum )
-                error(['Out of pocket maximum must be lower than the public'...
-                    'insurance maximum'])
-            end
-        end
-        
-        function limits = integrationLimits(obj, type, tol)
-            % Finds the smallest possible interval such that all points in
-            % it have positive (at machine accuracy) density. Perfoms a
-            % check to see if integrating the density between these points
-            % results in 1
+        function mcoverage = meanCoverage(obj, contract)
             
-            limits(1) = findCloserZero(type.M,1e6,tol);
-            limits(2) = findCloserZero(type.M,-1e6,tol);
+            meantype.A = obj.typeDistributionMean(1);
+            meantype.H = obj.typeDistributionMean(2);
+            meantype.M = obj.typeDistributionMean(3);
+            meantype.S = obj.typeDistributionMean(4);
             
-            integralCheck = integral(@(l)...
-                lossDistributionFunction(obj, type, l), ...
-                limits(1),limits(2),'AbsTol', 1e-15,'RelTol',1e-12);
+            mexpenditure = eFunction(obj, contract, meantype);
             
-            if ( abs(integralCheck - 1) > 1e-6 )
-                error('Integral could not be well approximated, or this is not a distribution')
-            end
-            
-            function b = findCloserZero(b,d_init,tol)
-                f_b = 0;
-                d = d_init;
-                while (abs(d) > tol || f_b > 0)
-                    b = b - d;
-                    f_b = obj.lossDistributionFunction(type,b);
-                    if (f_b == 0)
-                        if (sign(d) == sign(d_init))
-                            d = - d / 10;
-                        end
-                    else
-                        if (sign(d) ~= sign(d_init))
-                            d = -d / 10;
-                        end
-                    end
-                end
-            end
-            
-        end
-        
-        function x = lossDistributionFunction(~,type,l)
-            x = normpdf(l,type.M,type.S);
-        end
-        
-        function [cost, bounds] = exPostCost(obj, x, type, losses)
-            if (x.deductible == obj.publicInsuranceMaximum)
-                cost = 0;
-                bounds = 0;
+            if (contract.deductible == obj.publicInsuranceMaximum)
+                
+                mcost = expectedValue( obj, @(l) ...
+                    (l>obj.publicInsuranceMaximum).*(l-obj.publicInsuranceMaximum),...
+                    contract, meantype );
+                
             else
-                [~, expenditure, copay, bounds] = exPostUtility(obj, x, type, losses);
-                cost = expenditure - copay;
+                
+                mcost = cFunction(obj, contract, meantype);
+                
             end
+            
+            mcoverage = mcost/mexpenditure;
+            
         end
         
-        function [u, expenditure, payment, bounds] = exPostUtility(obj, x, type, losses)
+        function expenditure = exPostExpenditure(obj, contract, type, losses)
+            
+            if (contract.deductible == obj.publicInsuranceMaximum)
+                expenditure = losses;
+            else
+                [~, expenditure] = exPostUtility(obj, contract, type, losses);
+            end
+            
+        end
+        
+        function cost = exPostCost(obj, contract, type, losses)
+            
+            if (contract.deductible == obj.publicInsuranceMaximum)
+                cost = 0;
+            else
+                [~, expenditure, payment] = exPostUtility(obj, contract, type, losses);
+                cost = expenditure - payment;
+            end
+            
+        end
+        
+        function [u, expenditure, payment, bounds] = exPostUtility(obj, contract, type, losses)
             
             % Initializing variables
             u = zeros(1, length(losses));
@@ -290,29 +230,41 @@ classdef healthcaralognormalmodel_nl < model
                 % Loss is bounded below by zero
                 l = max(losses(i), 0);
                 
-                % Calculating the loss boundaries for each interval of expenses
-                bounds(i, 1) = max(min(x.deductible-(1-x.coinsurance)*type.H/2,x.oopMax-type.H/2),0);
-                bounds(i, 2) = max(x.deductible-(1-x.coinsurance)*type.H/2,0);
-                bounds(i, 3) = max((x.oopMax-(1-x.coinsurance)*x.deductible)/x.coinsurance ...
-                    - (2 - x.coinsurance) * type.H / 2, 0);
-                
-                if (x.deductible == obj.publicInsuranceMaximum)
+                % If contract is the null contract
+                if (contract.deductible == obj.publicInsuranceMaximum)
+                    
+                    bounds(i,:) = obj.publicInsuranceMaximum;
                     u(i) = max(-l,-obj.publicInsuranceMaximum);
                     payment(i) = min(l,obj.publicInsuranceMaximum);
                     expenditure(i) = l;
-                elseif l < bounds(i, 1)
-                    expenditure(i) = l;
-                    u(i) = -l;
-                    payment(i) = l;
-                elseif (l >= bounds(i, 2)) && (l <= bounds(i, 3))
-                    u(i) = (1-x.coinsurance)^2*type.H/2 - (1-x.coinsurance)*x.deductible - x.coinsurance*l;
-                    expenditure(i) = (1-x.coinsurance)*type.H + l;
-                    payment(i) = x.deductible + (1-x.coinsurance)*(expenditure(i)-x.deductible);
                     
                 else
-                    u(i) = type.H/2 - x.oopMax;
-                    expenditure(i) = type.H + l;
-                    payment(i) = x.oopMax;
+                    
+                    % Calculating the loss boundaries for each interval of expenses
+                    bounds(i, 1) = max(min(contract.deductible-(1-contract.coinsurance)*type.H/2,contract.oopMax-type.H/2),0);
+                    bounds(i, 2) = max(contract.deductible-(1-contract.coinsurance)*type.H/2,0);
+                    bounds(i, 3) = max((contract.oopMax-(1-contract.coinsurance)*contract.deductible)/contract.coinsurance ...
+                        - (2 - contract.coinsurance) * type.H / 2, 0);
+                    
+                    if l < bounds(i, 1)
+                        
+                        expenditure(i) = l;
+                        u(i) = -l;
+                        payment(i) = l;
+                        
+                    elseif (l >= bounds(i, 2)) && (l < bounds(i, 3))
+                        
+                        u(i) = (1-contract.coinsurance)^2*type.H/2 - (1-contract.coinsurance)*contract.deductible - contract.coinsurance*l;
+                        expenditure(i) = (1-contract.coinsurance)*type.H + l;
+                        payment(i) = contract.deductible + contract.coinsurance*(expenditure(i)-contract.deductible);
+                        
+                    else
+                        
+                        u(i) = type.H/2 - contract.oopMax;
+                        expenditure(i) = type.H + l;
+                        payment(i) = contract.oopMax;
+                        
+                    end
                 end
             end
         end
@@ -337,8 +289,153 @@ classdef healthcaralognormalmodel_nl < model
             
             CalculationParametersOptimum.tolerance = CalculationParametersEquilibrium.tolerance;
             CalculationParametersOptimum.maxIterations = 10^4;
-        end;
-        
+        end
     end
+    
+    methods ( Access = private, Hidden = true ) % Auxiliary methods
+        
+        function checkContract(obj, contract)
+            if ( contract.coinsurance < 0 || contract.coinsurance > 1 )
+                error('Coinsurance must be between zero and one')
+            elseif ( contract.deductible > contract.oopMax || contract.deductible < 0 )
+                error(['Deductible must be higher than zero, and lower than'...
+                    ' the out of pocket maximum'])
+            elseif ( contract.oopMax > obj.publicInsuranceMaximum )
+                error(['Out of pocket maximum must be lower than the public'...
+                    'insurance maximum'])
+            end
+        end
+        
+        function x = logExpectedExponentialValue(obj, function_handle, contract, type )
+            
+            [limits, oopMaxLoss] = integralLimits(obj, contract, type);
+            
+            if ( limits(1) ~= limits(2) )
+                [~, K] = fminbnd(@(l) - log( lossPDF(obj, type, l) )...
+                    - function_handle(l), limits(1), limits(2) );
+                K = -K;
+            else
+                K = 0;
+            end
+            
+            x = leftIntegral(obj,  @(l) exp( function_handle(l) - K ), ...
+                contract, type, limits );
+            
+            x = x + innerIntegral (obj, @(l) exp( log( lossPDF(obj, type, l) ) ...
+                + function_handle(l) - K), contract, type, limits, oopMaxLoss );
+            
+            x = x + rightIntegral( obj,@(l) exp( function_handle(l) - K ),...
+                contract, type, limits, oopMaxLoss );
+            
+            x = log(x) + K;
+            
+        end
+        
+        function x = expectedValue(obj, function_handle, contract, type )
+            
+            
+            [limits, oopMaxLoss] = integralLimits(obj, contract, type);
+            
+            x = leftIntegral(obj, function_handle, contract, type, limits );
+            
+            x = x + innerIntegral (obj, @(l) lossPDF(obj, type, l)...
+                .* function_handle(l), contract, type, limits, oopMaxLoss );
+            
+            x = x + rightIntegral(obj, @(l) function_handle(l), contract,...
+                type, limits, oopMaxLoss );
+            
+        end
+        
+        function x = leftIntegral(obj, function_handle, ~, type, limits )
+            
+            x = 0;
+            
+            if ( limits(1) == 0 )
+                x = lossCDF(obj, type, 0) * function_handle(0);
+            end
+            
+        end
+        
+        function x = innerIntegral(obj, function_handle, contract, type, limits, oopMaxLoss )
+            
+            x = 0;
+            
+            [~, ~, ~, bounds] = exPostUtility(obj, contract, type, 0);
+            
+            if ( limits(2) > 0 || limits(1) <  oopMaxLoss )
+                x  = integral(@(l) function_handle(l), limits(1), limits(2),...
+                    'AbsTol', 1e-15,'RelTol',1e-12,'WayPoints',...
+                    sort([linspace(limits(1), limits(2),1e3),bounds(isfinite(bounds))]) );
+            end
+            
+        end
+        
+        function x = rightIntegral(obj, function_handle, contract, type, limits, oopMaxLoss )
+            
+            x = 0;
+            
+            if ( limits(2) == oopMaxLoss )
+                
+                inclination = function_handle( oopMaxLoss + 1 )...
+                    - function_handle( oopMaxLoss );
+                
+                x = (1 - lossCDF(obj, type, oopMaxLoss)) ...
+                    * function_handle( oopMaxLoss );
+                
+                if (inclination > 0)
+                    
+                    x = x + inclination...
+                        * ( type.M - innerIntegral(obj,@(l) l.*lossPDF(obj, type, l),...
+                        contract, type, limits, oopMaxLoss) -  (1 - lossCDF(obj, type, oopMaxLoss)) ...
+                        * oopMaxLoss  );
+                    
+                end
+                
+            end
+            
+        end
+        
+        function [limits, oopMaxLoss] = integralLimits(obj, contract, type)
+            
+            [~, ~, ~, bounds] = exPostUtility(obj, contract, type, 0);
+            oopMaxLoss = bounds(3);
+            
+            if (lossPDF(obj,type,0) > 0);
+                limits(1) = 0;
+            elseif ( (type.M > oopMaxLoss ) && ...
+                    lossPDF(obj, type, oopMaxLoss) == 0)
+                limits(1) = oopMaxLoss;
+            else
+                limits(1) = max(0,findCloserNonZero(min(type.M,oopMaxLoss),type.M/100,1e-10));
+            end
+            
+            if (lossPDF(obj,type,oopMaxLoss) > 0);
+                limits(2) = oopMaxLoss;
+            elseif (type.M > oopMaxLoss )
+                limits(2) = oopMaxLoss;
+            else
+                limits(2) = max(0, findCloserNonZero(type.M,-type.M/100,1e-10));
+            end
+            
+            function b = findCloserNonZero(b,d_init,tol)
+                f_b = 0;
+                d = d_init;
+                while ( abs(d) > tol || f_b == 0 )
+                    b = b - d;
+                    f_b = obj.lossPDF(type,b);
+                    if (f_b > 0)
+                        if (sign(d) ~= sign(d_init))
+                            d = - d / 10;
+                        end
+                    else
+                        if (sign(d) == sign(d_init))
+                            d = - d / 10;
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
 end
 
