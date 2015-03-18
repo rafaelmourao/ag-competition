@@ -307,7 +307,7 @@ classdef healthcaralognormalmodel_nl < model
                 elseif (l >= bounds(i, 2)) && (l <= bounds(i, 3))
                     u(i) = (1-x.coinsurance)^2*type.H/2 - (1-x.coinsurance)*x.deductible - x.coinsurance*l;
                     expenditure(i) = (1-x.coinsurance)*type.H + l;
-                    payment(i) = x.deductible + x.coinsurance*(expenditure(i)-x.deductible);
+                    payment(i) = x.deductible + (1-x.coinsurance)*(expenditure(i)-x.deductible);
                     
                 else
                     u(i) = type.H/2 - x.oopMax;
