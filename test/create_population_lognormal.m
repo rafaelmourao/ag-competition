@@ -87,6 +87,12 @@ Model(i) = healthcaralognormalmodel_nl( deductibleVector, ...
     coinsuranceVector, oopMaxVector, publicInsuranceMaximum, ...  
     typeDistributionMean{i}, typeDistributionLogCovariance{i});
 
+for j = 1:length(deductibleVector)
+    meanCoverage(j) = Model(i).meanCoverage(contract(j));
+end
+
+disp(meanCoverage)
+
 tic
 Population(i) = population(Model(i), populationSize, nworkers);
 time=toc;
