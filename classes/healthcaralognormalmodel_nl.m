@@ -398,7 +398,7 @@ classdef healthcaralognormalmodel_nl < model
         function [limits, oopMaxLoss] = integralLimits(obj, contract, type)
             
             [~, ~, ~, bounds] = exPostUtility(obj, contract, type, 0);
-            oopMaxLoss = max(bounds(1),bounds());
+            oopMaxLoss = max(bounds(1),bounds(3));
             
             if (lossPDF(obj,type,0) > 0);
                 limits(1) = 0;
