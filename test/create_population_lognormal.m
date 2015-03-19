@@ -88,7 +88,7 @@ Model(i) = healthcaralognormalmodel_nl( deductibleVector, ...
     typeDistributionMean{i}, typeDistributionLogCovariance{i});
 
 for j = 1:length(deductibleVector)
-    meanCoverage(j) = Model(i).meanCoverage(contract(j));
+    meanCoverage(j) = Model(i).meanCoverage(Model(i).contracts{j});
 end
 
 disp(meanCoverage)
