@@ -21,7 +21,7 @@ for i = 1:length(test)
     
 Tables = cell(1,6);
 ncontracts = test(i).Population(1).nContracts;
-x = cell(8,ncontracts);
+x = cell(9,ncontracts);
  
 for j = 1:4
     a=[];
@@ -30,18 +30,19 @@ for j = 1:4
     end
     x(1,:)=num2cell(test(i).DEquilibrium{j});
     x(2,:)=num2cell(test(i).pEquilibrium{j});
-    x(3,:)=num2cell(test(i).DEfficient{j});
-    x(4,:)=num2cell(test(i).pEfficient{j});
-    x(5,1)=num2cell(test(i).WEfficient{j});
-    x(6,2:end)=num2cell(test(i).DEquilibrium{j+4});
-    x(7,2:end)=num2cell(test(i).pEquilibrium{j+4});
-    x(8,:)=num2cell(a);
+    x(3,1)=num2cell(test(i).WEquilibrium{j});
+    x(4,:)=num2cell(test(i).DEfficient{j});
+    x(5,:)=num2cell(test(i).pEfficient{j});
+    x(6,1)=num2cell(test(i).WEfficient{j});
+    x(7,2:end)=num2cell(test(i).DEquilibrium{j+4});
+    x(8,2:end)=num2cell(test(i).pEquilibrium{j+4});
+    x(9,:)=num2cell(a);
     
     
     Tables{j} = cell2table(x,...
           'RowNames',{'Equilibrium Demand','Equilibrium Prices',...
-         'Efficient Demand','Efficient Prices','Efficient Welfare',...
-         'Mandate Demand','Mandate Prices','Mean Coverage'});
+         'Equilibrium Welfare', 'Efficient Demand','Efficient Prices',
+         'Efficient Welfare','Mandate Demand','Mandate Prices','Mean Coverage'});
      
      writetable(Tables{j},file(i),'Sheet',Testnames{j},...
          'WriteRowNames',true)

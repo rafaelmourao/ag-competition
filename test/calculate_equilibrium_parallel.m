@@ -67,7 +67,7 @@ parfor i = 1:nworkers
     
 [pEquilibrium{i}, DEquilibrium{i}, ACEquilibrium{i}, ComputationOutputEquilibrium{i}] = ...
          Population(i).findequilibrium(CalculationParametersEquilibrium)
-
+WEquilibrium{i} = Population(i).welfare(pEquilibrium{i}, costOfPublicFunds)
 
 [pEfficient{i}, WEfficient{i}, ComputationOutputEfficient{i}] = ...
             findefficient(Population(i), costOfPublicFunds, CalculationParametersOptimum)
@@ -82,6 +82,7 @@ for i = 1:length(test)
     test(i).pEquilibrium{j} = pEquilibrium{z};
     test(i).DEquilibrium{j} = DEquilibrium{z};
     test(i).ACEquilibrium{j} = ACEquilibrium{z};
+    test(i).WEquilibrium{j} = WEquilibrium{z};
     test(i).ComputationOutputEquilibrium{j} = ComputationOutputEquilibrium{z};
     test(i).pEfficient{j} = pEfficient{z};
     test(i).WEfficient{j} = WEfficient{z};
@@ -89,7 +90,6 @@ for i = 1:length(test)
     test(i).DEfficient{j} = DEfficient{z};
     end
 end
-
 clear Population
 
 save tests.mat
