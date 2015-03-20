@@ -92,9 +92,10 @@ for i = 1:length(test)
     test(i).DEfficient{j} = DEfficient{z};
     end
 end
+
 clear Population
 
-save tests.mat
+save('tests.mat','-v7.3')
 
 delete(poolobj)
 
