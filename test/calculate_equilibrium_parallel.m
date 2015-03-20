@@ -25,7 +25,7 @@ CalculationParametersOptimum.tolerance            = 0.01;
 CalculationParametersOptimum
 
 nPopulations = length(Population);
-nworkers = length(Population) * length(test);
+nworkers = 2*length(Population) * length(test);
 
 
 for i = 1:length(test) 
