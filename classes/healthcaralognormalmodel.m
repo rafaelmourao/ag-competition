@@ -12,7 +12,6 @@ classdef healthcaralognormalmodel < model
     properties
         typeDistributionMean
         typeDistributionLogCovariance
-        test
     end
     
     methods

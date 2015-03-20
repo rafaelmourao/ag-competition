@@ -24,7 +24,9 @@ CalculationParametersOptimum.maxIterations        = 1e3;
 CalculationParametersOptimum.tolerance            = 0.01;
 CalculationParametersOptimum
 
-nworkers = 8 * length(test);
+nPopulations = length(Population);
+nworkers = length(Population) * length(test);
+
 
 for i = 1:length(test) 
 
@@ -32,7 +34,7 @@ test(i).costOfPublicFunds = costOfPublicFunds;
 test(i).CalculationParametersEquilibrium = CalculationParametersEquilibrium;
 test(i).CalculationParametersOptimum = CalculationParametersOptimum;
 
-for j = 1:4
+for j = 1:nPopulations
     test(i).Population(j) = Population(j);
     test(i).Population(j).uMatrix = test(i).Population(j).uMatrix(:,test(i).contracts);
     test(i).Population(j).cMatrix = test(i).Population(j).cMatrix(:,test(i).contracts);
@@ -40,12 +42,12 @@ for j = 1:4
     test(i).Model(j) = Model(j);
     test(i).Model(j).contracts = test(i).Model(j).contracts(:,test(i).contracts);
 end
-for j = 5:8
-    test(i).Population(j) = test(i).Population(j-4);
-    test(i).Population(j).uMatrix = test(i).Population(j-4).uMatrix(:,2:end);
-    test(i).Population(j).cMatrix = test(i).Population(j-4).cMatrix(:,2:end);
+for j = (nPopulations+1):(2*nPopulations)
+    test(i).Population(j) = test(i).Population(j-nPopulations);
+    test(i).Population(j).uMatrix = test(i).Population(j-nPopulations).uMatrix(:,2:end);
+    test(i).Population(j).cMatrix = test(i).Population(j-nPopulations).cMatrix(:,2:end);
     test(i).Population(j).nContracts = length(test(i).contracts)-1;
-    test(i).Model(j) = test(i).Model(j-4);
+    test(i).Model(j) = test(i).Model(j-nPopulations);
     test(i).Model(j).contracts = test(i).Model(j).contracts(:,2:end);
 end
 
@@ -57,8 +59,8 @@ end
 poolobj = parpool(nworkers)
 
 for i = 1:length(test)
-    for j = 1:8
-    z = 8*(i-1) + j;
+    for j = 1:(2*nPopulations)
+    z = 2*nPopulations*(i-1) + j;
     Population(z) = test(i).Population(j);
     end
 end
@@ -77,8 +79,8 @@ DEfficient{i} = Population(i).demand(pEfficient{i})
 end
 
 for i = 1:length(test)
-    for j = 1:8
-    z = 8*(i-1) + j;
+    for j = 1:(2*nPopulations)
+    z = (2*nPopulations)*(i-1) + j;
     test(i).pEquilibrium{j} = pEquilibrium{z};
     test(i).DEquilibrium{j} = DEquilibrium{z};
     test(i).ACEquilibrium{j} = ACEquilibrium{z};
