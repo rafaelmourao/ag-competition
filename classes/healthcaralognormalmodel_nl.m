@@ -192,7 +192,7 @@ classdef healthcaralognormalmodel_nl < model
             meantype.S = obj.typeDistributionMean(4);
             
             mexpenditure =  expectedValue( obj, @(l) ...
-                exPostExpenditure(obj, contract, type, l), contract, type );
+                exPostExpenditure(obj, contract, meantype, l), contract, meantype );
             
             if (contract.deductible == obj.publicInsuranceMaximum)
                 
