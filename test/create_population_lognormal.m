@@ -17,10 +17,14 @@ meanS = sqrt(25000^2 - 5100^2);
 typeDistributionMean{1} = ...
     [1.9*1e-3, 1330, 4340, meanS]
 typeDistributionMean{2} = ...
-    [1.5*1e-5, 1330, 4340, meanS]
+    [1.9*1e-4, 1330, 4340, meanS]
 typeDistributionMean{3} = ...
-    [1.9*1e-3, 1330, 4340, meanS]
+    [1.5*1e-5, 1330, 4340, meanS]
 typeDistributionMean{4} = ...
+    [1.9*1e-3, 1330, 4340, meanS]
+typeDistributionMean{5} = ...
+    [1.9*1e-4, 1330, 4340, meanS]
+typeDistributionMean{6} = ...
     [1.5*1e-5, 1330, 4340, meanS]
 
 typeDistributionLogCovariance{1} = ...
@@ -37,11 +41,23 @@ typeDistributionLogCovariance{2} = ...
 
 typeDistributionLogCovariance{3} = ...
     [ 0.25 -0.01 -0.12 0    ; % c11 = 0.25 originally
-    -0.01  0.98 -0.03 0    ; % c22 = 0.98 originally
+    -0.01  0.28 -0.03 0    ; % c22 = 0.98 originally
     -0.12 -0.03  0.20 0    ; % c33 = 0.20 originally
     0     0     0    0.25] % ???
 
 typeDistributionLogCovariance{4} = ...
+    [ 0.25 -0.01 -0.12 0    ; % c11 = 0.25 originally
+    -0.01  0.98 -0.03 0    ; % c22 = 0.98 originally
+    -0.12 -0.03  0.20 0    ; % c33 = 0.20 originally
+    0     0     0    0.25] % ???
+
+typeDistributionLogCovariance{5} = ...
+    [ 0.25 -0.01 -0.12 0    ; % c11 = 0.25 originally
+    -0.01  0.98 -0.03 0    ; % c22 = 0.98 originally
+    -0.12 -0.03  0.20 0    ; % c33 = 0.20 originally
+    0     0     0    0.25] % ???
+
+typeDistributionLogCovariance{6} = ...
     [ 0.25 -0.01 -0.12 0    ; % c11 = 0.25 originally
     -0.01  0.98 -0.03 0    ; % c22 = 0.98 originally
     -0.12 -0.03  0.20 0    ; % c33 = 0.20 originally
@@ -81,7 +97,7 @@ end
 
 poolobj = parpool(nworkers)
 
-for i = 1:4
+for i = 1:length(typeDistributionMean)
     
 Model(i) = healthcaralognormalmodel_nl( deductibleVector, ...
     coinsuranceVector, oopMaxVector, publicInsuranceMaximum, ...  
