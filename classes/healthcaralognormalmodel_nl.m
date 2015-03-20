@@ -61,6 +61,8 @@ classdef healthcaralognormalmodel_nl < model
         end
         
         function u = uFunction(obj, contract, type)
+            % Returns the willingness to pay of an agent for a contract,
+            % considering the outside option of public insurance.
             
             % Checking contract
             checkContract(obj, contract);
@@ -110,29 +112,38 @@ classdef healthcaralognormalmodel_nl < model
         end
         
         function c = cFunction(obj, contract, type)
+            % Returns the expected private cost incurred by the insurer
+            % when the agent chooses a contract. Currently, costs
+            % occur only when the agent chooses public insurance
             
             % Checking contract
             checkContract(obj, contract);
             
             % If contract is null, then return zero cost
-            
             if (contract.deductible == obj.publicInsuranceMaximum)
                 c = 0;
-                return
+            else
+                c = expectedValue( obj, @(l) ...
+                    exPostCost(obj, contract, type, l), contract, type );
             end
-            
-            c = expectedValue( obj, @(l) ...
-                exPostCost(obj, contract, type, l), contract, type );
             
         end
         
         function e = eFunction(obj, contract, type)
+            % Returns the expected externality generated when the
+            % agent chooses a contract. Currently, externalities occur
+            % only when the agent chooses public insurance.
             
             % Checking contract
             checkContract(obj, contract);
             
-            e = expectedValue( obj, @(l) ...
-                exPostExpenditure(obj, contract, type, l), contract, type );
+            if (contract.deductible ~= obj.publicInsuranceMaximum)
+                e = 0;
+            else
+                e = expectedValue( obj, @(l) ...
+                    (l>obj.publicInsuranceMaximum).*(l-obj.publicInsuranceMaximum),...
+                    contract, type );
+            end
             
         end
         
@@ -171,20 +182,21 @@ classdef healthcaralognormalmodel_nl < model
             
         end
         
-        function mcoverage = meanCoverage(obj, contract)
+        function m = meanCoverage(obj, contract)
+            
+            checkContract(obj, contract);
             
             meantype.A = obj.typeDistributionMean(1);
             meantype.H = obj.typeDistributionMean(2);
             meantype.M = obj.typeDistributionMean(3);
             meantype.S = obj.typeDistributionMean(4);
             
-            mexpenditure = eFunction(obj, contract, meantype);
+            mexpenditure =  expectedValue( obj, @(l) ...
+                exPostExpenditure(obj, contract, type, l), contract, type );
             
             if (contract.deductible == obj.publicInsuranceMaximum)
                 
-                mcost = expectedValue( obj, @(l) ...
-                    (l>obj.publicInsuranceMaximum).*(l-obj.publicInsuranceMaximum),...
-                    contract, meantype );
+                mcost = eFunction(obj, contract, meantype);
                 
             else
                 
@@ -192,7 +204,7 @@ classdef healthcaralognormalmodel_nl < model
                 
             end
             
-            mcoverage = mcost/mexpenditure;
+            m = mcost/mexpenditure;
             
         end
         

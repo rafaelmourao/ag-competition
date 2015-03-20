@@ -12,6 +12,7 @@ classdef healthcaralognormalmodel < model
     properties
         typeDistributionMean
         typeDistributionLogCovariance
+        test
     end
     
     methods
@@ -40,6 +41,10 @@ classdef healthcaralognormalmodel < model
         function c = cFunction(~, x, type)
                 c = x.slope .* type.M ...
                 + (x.slope.^2) .* type.H;
+        end
+        
+        function e = eFunction(~, ~, ~)
+                e = 0;
         end
             
         function Type = typeDistribution(Model)

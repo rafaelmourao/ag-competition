@@ -20,6 +20,7 @@ classdef model
     methods (Abstract)
         u = uFunction(obj,x, type)
         c = cFunction(obj,x, type)
+        e = eFunction(obj,x, type) 
         type = typeDistribution(obj)
     end
     
@@ -27,7 +28,7 @@ classdef model
         % Get Methods
         function n = get.nContracts(obj)
             n = length(obj.contracts);
-        end;
+        end
     end
 end
 
