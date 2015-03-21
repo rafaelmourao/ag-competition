@@ -21,8 +21,8 @@ Testnames = {'High Aversion, Low MH Variance', 'Medium Aversion, Low MH Variance
 
 for i = 1:length(test)
    
-ncontracts = test(i).Population(1).nContracts;
-nPopulations = length(test(i).Population) / 2; % Number of population objects is doubled to consider the mandate case
+ncontracts = length(test(i).contracts);
+nPopulations = length(test(i).Model) / 2; % Number of population objects is doubled to consider the mandate case
 contractinfo = {'Deductible','Coinsurance','OOP Max','Mean Coverage'}';
 for j = 1:ncontracts
     contractinfo{1,j+1} = test(i).Model(1).contracts{j}.deductible;
