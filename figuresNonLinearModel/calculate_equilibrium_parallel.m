@@ -11,7 +11,7 @@ addpath('../classes')
 load('Populations.mat')
 rng(1);
 
-test.contracts = [ 1 6 14 18 21 23 24 25 ];
+test.contracts = 1:Population(1).nContracts; % Select all contracts from population
 
 costOfPublicFunds = 0;
 CalculationParametersEquilibrium.behavioralAgents = 0.1;

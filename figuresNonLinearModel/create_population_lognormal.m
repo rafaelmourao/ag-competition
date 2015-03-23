@@ -47,6 +47,11 @@ deductibleVector = [ publicInsuranceMaximum, 1500, 750, 500, 250, linspace(5200,
 coinsuranceVector = [ 1, .1, .1, .1, .1, linspace(0.35,.1,20)  ]
 oopMaxVector = [ publicInsuranceMaximum, 4500, 3750, 3500, 2750, linspace(6400,2500,20) ]
 
+contracts = [ 1 6 14 18 21 23 24 25 ]
+
+deductibleVector = deductibleVector(contracts);
+coinsuranceVector = coinsuranceVector(contracts);
+oopMaxVector = oopMaxVector(contracts);
 
 % Calculate equilibrium and optimal prices.
 
