@@ -12,6 +12,7 @@ classdef population
         typeList
         uMatrix
         cMatrix
+        eMatrix
         size
         nContracts
     end
@@ -30,6 +31,7 @@ classdef population
             n_Contracts = Model.nContracts;
             u_Matrix = zeros(n, Model.nContracts);
             c_Matrix = zeros(n, Model.nContracts);
+            e_Matrix = zeros(n, Model.nContracts);
             type_List = cell(1,n);
             % For reproducibility, generate types outside of parfor loop
             for i = 1:n
@@ -40,10 +42,14 @@ classdef population
                     x = Model.contracts{j};
                     u_Matrix(i, j) = Model.uFunction(x, type_List{i});
                     c_Matrix(i, j) = Model.cFunction(x, type_List{i});
+                    e_Matrix(i, j) = Model.eFunction(x, type_List{i});
                 end
             end
             Population.uMatrix    = u_Matrix;
             Population.cMatrix    = c_Matrix;
+            if any( e_Matrix(:) ) % If there is externality
+                Population.eMatrix    = e_Matrix; % otherwise leave matrix empty
+            end
             Population.typeList   = type_List;
             Population.size       = n;
             Population.nContracts = n_Contracts;
@@ -72,21 +78,27 @@ classdef population
             D = histc(choiceVector',1:Population.nContracts)/Population.size;
             
             % Calculating the cost for each contract by using the
-            % matlab function accumarray, summing all expected costs 
+            % matlab function accumarray, adding all expected costs
             % according to the choice vector subscripts
             TC = accumarray(choiceVector, Population.cMatrix(choiceIndices), ...
                 [Population.nContracts,1])'/Population.size;
             
             if nargout > 2
-            CS = mean(maxSurplus);
+                CS = mean(maxSurplus);
+            end
+            
+        end
+        
+        function W = welfare(Population, p, costOfPublicFunds)
+            [D, TC, CS, choiceVector] = Population.demand(p);
+            if isempty(Population.eMatrix)
+                W = CS + (1+costOfPublicFunds).*(D * p' - sum(TC));
+            else
+                choiceIndices =  (1:Population.size)' + (choiceVector-1)*Population.size;
+                E = mean(Population.eMatrix(choiceIndices));
+                W = CS + (1+costOfPublicFunds).*(D * p' - sum(TC) - E);
             end
         end
-                       
-        function W = welfare(Population, p, costOfPublicFunds)
-            [D, TC, CS, ~] = Population.demand(p);
-            W = CS + (1+costOfPublicFunds).*(D * p' - sum(TC));
-        end;      
-        
         % Computational methods
         function [p, D, AC, ComputationOutput] = findequilibrium(Population, CalculationParameters)
             % findequilibrium: Finds an equilibrium by iterating average cost. To make it
@@ -149,7 +161,7 @@ classdef population
             ComputationOutput.nIterations = nIterations;
             ComputationOutput.runTime     = toc;
         end
-                
+        
         function [p, W, ComputationOutput] = findefficient(Population, costOfPublicFunds, CalculationParameters)
             tic;
             % findefficient: This function finds an efficient allocation
@@ -215,7 +227,7 @@ classdef population
             ComputationOutput.nIterations = nIterations;
             ComputationOutput.error       = error;
             ComputationOutput.runTime     = toc;
-        end;
+        end
         
         % Graphing methods
         function graphHandle = graphEFC(Population)
@@ -240,7 +252,7 @@ classdef population
                 for i = 1 : nPointstoPlot-1
                     dp = dpVector(i);
                     p = [0, dp];
-                    [D, TC, ~, ~] = Population.demand(p);
+                    [D, TC] = Population.demand(p);
                     pVector(i)   = p(2);
                     qVector(i)   = D(2);
                     dACVector(i) = TC(2)/D(2) - TC(1)/D(1);

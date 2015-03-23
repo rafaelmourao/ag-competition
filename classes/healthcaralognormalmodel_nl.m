@@ -61,6 +61,8 @@ classdef healthcaralognormalmodel_nl < model
         end
         
         function u = uFunction(obj, contract, type)
+            % Returns the willingness to pay of an agent for a contract,
+            % considering the outside option of public insurance.
             
             % Checking contract
             checkContract(obj, contract);
@@ -110,29 +112,38 @@ classdef healthcaralognormalmodel_nl < model
         end
         
         function c = cFunction(obj, contract, type)
+            % Returns the expected private cost incurred by the insurer
+            % when the agent chooses a contract. Currently, costs
+            % occur only when the agent chooses public insurance
             
             % Checking contract
             checkContract(obj, contract);
             
             % If contract is null, then return zero cost
-            
             if (contract.deductible == obj.publicInsuranceMaximum)
                 c = 0;
-                return
+            else
+                c = expectedValue( obj, @(l) ...
+                    exPostCost(obj, contract, type, l), contract, type );
             end
-            
-            c = expectedValue( obj, @(l) ...
-                exPostCost(obj, contract, type, l), contract, type );
             
         end
         
         function e = eFunction(obj, contract, type)
+            % Returns the expected externality generated when the
+            % agent chooses a contract. Currently, externalities occur
+            % only when the agent chooses public insurance.
             
             % Checking contract
             checkContract(obj, contract);
             
-            e = expectedValue( obj, @(l) ...
-                exPostExpenditure(obj, contract, type, l), contract, type );
+            if (contract.deductible ~= obj.publicInsuranceMaximum)
+                e = 0;
+            else
+                e = expectedValue( obj, @(l) ...
+                    (l>obj.publicInsuranceMaximum).*(l-obj.publicInsuranceMaximum),...
+                    contract, type );
+            end
             
         end
         
@@ -171,20 +182,21 @@ classdef healthcaralognormalmodel_nl < model
             
         end
         
-        function mcoverage = meanCoverage(obj, contract)
+        function m = meanCoverage(obj, contract)
+            
+            checkContract(obj, contract);
             
             meantype.A = obj.typeDistributionMean(1);
             meantype.H = obj.typeDistributionMean(2);
             meantype.M = obj.typeDistributionMean(3);
             meantype.S = obj.typeDistributionMean(4);
             
-            mexpenditure = eFunction(obj, contract, meantype);
+            mexpenditure =  expectedValue( obj, @(l) ...
+                exPostExpenditure(obj, contract, meantype, l), contract, meantype );
             
             if (contract.deductible == obj.publicInsuranceMaximum)
                 
-                mcost = expectedValue( obj, @(l) ...
-                    (l>obj.publicInsuranceMaximum).*(l-obj.publicInsuranceMaximum),...
-                    contract, meantype );
+                mcost = eFunction(obj, contract, meantype);
                 
             else
                 
@@ -192,7 +204,7 @@ classdef healthcaralognormalmodel_nl < model
                 
             end
             
-            mcoverage = mcost/mexpenditure;
+            m = mcost/mexpenditure;
             
         end
         
@@ -365,7 +377,7 @@ classdef healthcaralognormalmodel_nl < model
             if ( limits(2) > 0 || limits(1) <  oopMaxLoss )
                 x  = integral(@(l) function_handle(l), limits(1), limits(2),...
                     'AbsTol', 1e-15,'RelTol',1e-12,'WayPoints',...
-                    sort([linspace(limits(1), limits(2),1e3),bounds(isfinite(bounds))]) );
+                    [bounds(isfinite(bounds)),linspace(limits(1), limits(2),1e3)] );
             end
             
         end
@@ -398,7 +410,7 @@ classdef healthcaralognormalmodel_nl < model
         function [limits, oopMaxLoss] = integralLimits(obj, contract, type)
             
             [~, ~, ~, bounds] = exPostUtility(obj, contract, type, 0);
-            oopMaxLoss = bounds(3);
+            oopMaxLoss = max(bounds(1),bounds(3));
             
             if (lossPDF(obj,type,0) > 0);
                 limits(1) = 0;

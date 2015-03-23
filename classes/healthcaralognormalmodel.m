@@ -41,6 +41,10 @@ classdef healthcaralognormalmodel < model
                 c = x.slope .* type.M ...
                 + (x.slope.^2) .* type.H;
         end
+        
+        function e = eFunction(~, ~, ~)
+                e = 0;
+        end
             
         function Type = typeDistribution(Model)
             v = Model.lognrndfrommoments(...
