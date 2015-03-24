@@ -28,7 +28,7 @@ for j = 1:ncontracts
     contractinfo{1,j+1} = test(i).Model(1).contracts{j}.deductible;
     contractinfo{2,j+1} = test(i).Model(1).contracts{j}.coinsurance; 
     contractinfo{3,j+1} = test(i).Model(1).contracts{j}.oopMax;
-    contractinfo{4,j+1} = round( test(i).Model(j).meanCoverage(test(i).Model(1).contracts{j}), 2);
+    contractinfo{4,j+1} = round( test(i).Model(1).meanCoverage(test(i).Model(1).contracts{j}), 2);
 end
 
 fid = fopen(file(i),'w+');
