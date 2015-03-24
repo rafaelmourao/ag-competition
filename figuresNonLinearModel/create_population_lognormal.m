@@ -55,7 +55,6 @@ oopMaxVector = oopMaxVector(contracts);
 
 % Calculate equilibrium and optimal prices.
 
-
 if ~isempty(gcp('nocreate'))
      delete(gcp)
 end

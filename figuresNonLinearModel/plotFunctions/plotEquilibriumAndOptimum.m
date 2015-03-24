@@ -1,5 +1,5 @@
 function [  ] = plotEquilibriumAndOptimum( ...
-    Model, pEquilibrium, DEquilibrium, pEfficient, DEfficient, modelNameString)
+    Model, pEquilibrium, DEquilibrium, pEfficient, DEfficient, modelNameString, Population)
 %plotEquilibriumAndOptimum Plots graphs that we sometimes use in every model.
 %   Inputs are the model, equilibrium prices and demand, efficient prices
 %   and demand, and a string with the name of the model. This function
@@ -12,8 +12,14 @@ function [  ] = plotEquilibriumAndOptimum( ...
 rng(1);
 
 % Parameters
+if nargin < 7
 populationSize           = 10^5;
 nPopulationDemandProfile = min(7000, populationSize);
+Population = population(Model, populationSize);
+else
+populationSize           = Population.size;
+nPopulationDemandProfile = min(7000, populationSize);
+end
 
 % Color Scheme
 colorRed  = [230,77,79]   / 255;
@@ -23,10 +29,8 @@ colorBlueLine = colorBlue     / 2;
 % Prepare
 xGrid = zeros(1, Model.nContracts);
 for j = 1 : Model.nContracts
-    xGrid(j) = Model.contracts{j}.slope;
+    xGrid(j) = Model.meanCoverage(Model.contracts{j});
 end;
-
-Population = population(Model, populationSize);
 
 % Calculate mean loss parameter of agents purchasing each contract
 meanLossTypeVector = zeros(Population.size, 1);
@@ -40,6 +44,7 @@ end;
 [~, ~, ~, choiceVectorEfficient]   = Population.demand(pEfficient);
 meanLossEquilibrium     = zeros(1, Model.nContracts);
 meanLossEfficient       = zeros(1, Model.nContracts);
+
 for j = 1 : Model.nContracts
     buyersEquilibrium = (choiceVectorEquilibrium == j);
     meanLossVectorBuyersEquilibrium = meanLossTypeVector(buyersEquilibrium);
@@ -53,7 +58,7 @@ end;
 slopeVectorEquilibrium = zeros(populationSize, 1);
 for j = 1 : Model.nContracts
     I = (choiceVectorEquilibrium == j);
-    slopeVectorEquilibrium(I) = Model.contracts{j}.slope;
+    slopeVectorEquilibrium(I) = Model.meanCoverage(Model.contracts{j});
 end;
 
 % Equilibrium and optimum
@@ -78,7 +83,7 @@ figEqPrices = figure;
         set(gca,'FontSize',27);
         set(findall(gcf,'type','text'),'FontSize',27);
    % Financial tick label
-        axis([0,1,0,8000])
+        axis([min(xGrid),1,0,8000])
         set(gca, 'YTickLabel', num2bank(get(gca, 'YTick')));
 
 fileName = ['./figures/', modelNameString, '_', 'equilibrium_prices.pdf'];        
@@ -108,7 +113,7 @@ figEffPrices = figure;
         set(gca,'FontSize',27);
         set(findall(gcf,'type','text'),'FontSize',27);
    % Financial tick label
-        axis([0,1,0,8000])
+        axis([min(xGrid),1,0,8000])
         set(gca, 'YTickLabel', num2bank(get(gca, 'YTick')));  
 
 fileName = ['./figures/', modelNameString, '_', 'efficient_prices.pdf'];        
@@ -149,40 +154,10 @@ figEffnEqPrices = figure;
         set(gca,'FontSize',27);
         set(findall(gcf,'type','text'),'FontSize',27);
    % Financial tick label
-        axis([0,1,0,8000])
+        axis([min(xGrid),1,0,8000])
         set(gca, 'YTickLabel', num2bank(get(gca, 'YTick')));
         
 fileName = ['./figures/', modelNameString, '_', 'efficient_and_equilibrium_prices.pdf'];        
-export_fig(fileName, '-transparent');
-fileName = [fileName(1: length(fileName)-4), '.eps'];
-print(fileName, '-depsc2');
-
-% Equilibrium demand profile
-figEqDemandProfile = figure;
-    set(figEqDemandProfile, 'Position', [0 0 1.618.*500 500]);
-    set(figEqDemandProfile, 'name', 'Equilibrium Demand Profile', 'numbertitle', 'on');
-    % Plot scatter
-        scatter(meanLossTypeVector(1:nPopulationDemandProfile), ...
-            riskAversionVector(    1:nPopulationDemandProfile), 20, ...
-            slopeVectorEquilibrium(1:nPopulationDemandProfile));
-        colorbar;
-            caxis([0.01, 1]);
-    % Labels
-        xlabel('Average Loss,  M_{\theta}');
-        ylabel('Risk Aversion, A_{\theta}');
-    % Properties
-        set(gca, 'xscale', 'log', ...
-                 'yscale', 'log');
-        grid off;
-   % Other options
-        box off;
-        set(gca,'FontSize',27);
-        set(findall(gcf,'type','text'),'FontSize',27);        
-    % Financial tick label
-                axis([500,100000,10^(-6),10^(-4)])
-        set(gca, 'XTickLabel', num2bank(get(gca, 'xtick')));     
-        
-fileName = ['./figures/', modelNameString, '_', 'equilibrium_demand_profile.pdf'];        
 export_fig(fileName, '-transparent');
 fileName = [fileName(1: length(fileName)-4), '.eps'];
 print(fileName, '-depsc2');

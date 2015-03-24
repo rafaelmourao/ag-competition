@@ -5,48 +5,51 @@
 %% Start
 clear;
 close all;
+mkdir('figures');
 addpath('../classes');
 addpath('../plotFunctions');
 addpath('../plotFunctions/export_fig');
 addpath('./plotFunctions');
 rng(1);
 
-%% Individual models
-for modelNameString = { ...
-        'interval',                  ...
-        'mandate',                   ...
-        'interval_high_mh_variance', ...
-        'mandate_high_mh_variance'};
-    
-    CalculationData = load(modelNameString{1});
-    plotEquilibriumAndOptimum( ...
-        CalculationData.Model, CalculationData.pEquilibrium, CalculationData.DEquilibrium, ...
-        CalculationData.pEfficient, CalculationData.DEfficient, modelNameString{1});
-end;
-
 %% Interval vs mandate
+
+
 % Start
-    close all;
-    clear;
-    Interval = load('interval');
-    Mandate  = load('mandate');
+    load('Populations.mat')
+    load('tests.mat')
+    Interval.Model = test.Model(1);
+    Interval.pEquilibrium = test.pEquilibrium{1};
+    Interval.DEquilibrium = test.DEquilibrium{1};
+    Interval.pEfficient = test.pEfficient{1};
+    Interval.DEfficient = test.DEfficient{1};
+    Mandate.Model = test.Model(2);
+    Mandate.pEquilibrium = test.pEquilibrium{2};
+    Mandate.DEquilibrium = test.DEquilibrium{2};
+    Mandate.pEfficient = test.pEfficient{2};
+    Mandate.DEfficient = test.DEfficient{2};
     
-% Calculate necessary series
+    plotEquilibriumAndOptimum( ...
+    Interval.Model, Interval.pEquilibrium, Interval.DEquilibrium, ...
+    Interval.pEfficient, Interval.DEfficient, 'Interval', Population);
+
+    % Calculate necessary series
+
     nContracts = Interval.Model.nContracts;
     xGrid = zeros(1, Interval.Model.nContracts);
     for j = 1 : nContracts
-        xGrid(j) = Interval.Model.contracts{j}.slope;
-    end;
+        xGrid(j) = Interval.Model.meanCoverage(Interval.Model.contracts{j});
+    end
 
-% Equilibrium vs mandate prices calculations
-    Population = population(Interval.Model, 10^5);
     meanLossTypeVector = zeros(Population.size, 1);
     for i = 1 : Population.size
+        
         meanLossTypeVector(i) = Population.typeList{i}.M;
-    end;
+    end
+    
     % Prices for the mandate, setting prices for contracts below minimum to
     % infinity.
-    pMandate = [zeros(1, nContracts - Mandate.Model.nContracts) + 10^6, Mandate.pEquilibrium];
+    pMandate = [zeros(1, nContracts - Mandate.Model.nContracts) + 10^6, test.pEquilibrium{2}];
     DMandate = Population.demand(pMandate);
 
     % Calculate choice vectors, for the model with all contracts available
@@ -65,7 +68,7 @@ end;
     end;
 
     % For plotting set prices to Inf below minimum
-    pMandate = [zeros(1, nContracts - Mandate.Model.nContracts) + Inf, Mandate.pEquilibrium];
+    pMandate = [zeros(1, nContracts - test.Model(2).nContracts) + Inf, Mandate.pEquilibrium];
     
 
 % Eqm vs mandate prices graphs
@@ -108,7 +111,7 @@ colormap([colorRed; colorBlue]);
             set(gca,'FontSize',27);
             set(findall(gcf,'type','text'),'FontSize',27);
        % Financial tick label
-            axis([0, 1, 0, 8000])
+            axis([min(xGrid), 1, 0, 8000])
             set(gca, 'YTickLabel', num2bank(get(gca, 'YTick')));
 
     fileName = ['./figures/mandate_vs_equilibrium_prices.pdf'];        
@@ -127,7 +130,7 @@ colormap([colorRed; colorBlue]);
             zeros(1, nContracts - Mandate.Model.nContracts), Mandate.DEquilibrium]', 3);
         colormap([colorRed; colorBlue]);
         hold on;
-        axis([0, 1, 0, .1 .* nContracts]);
+        axis([min(xGrid), 1, 0, .1 .* nContracts]);
     % Labels
         legend('No Mandate', 'Mandate', 'Location', 'NorthWest');
         legend boxoff
@@ -137,7 +140,6 @@ colormap([colorRed; colorBlue]);
         box off;
         set(gca,'FontSize',27);
         set(findall(gcf,'type','text'),'FontSize',27);
-        
    % Save
        fileName = './figures/mandate_vs_equilibrium_quantities.pdf';        
        export_fig(fileName, '-transparent');
