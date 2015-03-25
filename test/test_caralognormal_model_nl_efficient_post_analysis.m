@@ -3,7 +3,7 @@
 addpath('../classes');
 clear;
 close all;
-load population.mat;
+load test_caralognormal_model_nl_efficient.mat;
 
 WEquilibrium = Population.welfare(pEquilibrium, 0);
 
