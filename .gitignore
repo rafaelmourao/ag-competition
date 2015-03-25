@@ -20,3 +20,13 @@
 ####################
 *.m~
 *.asv
+
+# Dropbox #
+###########
+.dropbox.attr
+
+# Temporary bashes and outputs #
+################################
+*.sh~
+*.sh.o*
+*.sh.e*
