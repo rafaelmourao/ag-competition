@@ -19,10 +19,11 @@ meanS = sqrt(25000^2 - 5100^2);
 typeDistributionMean = ...
     [1.9*1e-3, 1330, 4340, meanS]; % Original A was 1.9*10^-3
 typeDistributionLogCovariance = ...
-    [ 0.25 0    0    0    ; % c11 = 0.25 originally
-      0    0.01 0    0    ; % c22 = 0.98 originally
-      0    0    0.01 0    ; % c33 = 0.20 originally
-      0    0    0    0.01]; % ???
+     [  0.25 -0.00 -0.00 0     ;
+     -0.00   0.01 -0.00 0     ;
+     -0.00 -0.00   0.01 0     ;
+     0        0        0      0.01];
+
 
 costOfPublicFunds = 0;
 
@@ -33,7 +34,7 @@ publicInsuranceMaximum = 30000;
 CalculationParametersOptimum.maxIterations        = 10^3;
 CalculationParametersOptimum.tolerance            = 0.01;
 
-CalculationParametersEquilibrium.behavioralAgents = 0.01;
+CalculationParametersEquilibrium.behavioralAgents = 0.1;
 CalculationParametersEquilibrium.fudge            = 1e-4;
 CalculationParametersEquilibrium.maxIterations    = 1e5;
 CalculationParametersEquilibrium.tolerance        = 10;
