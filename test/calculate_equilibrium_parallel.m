@@ -11,6 +11,7 @@ addpath('../classes')
 load('Populations.mat')
 rng(1);
 
+test.contracts = 1:Population(1).nContracts;
 
 costOfPublicFunds = 0;
 CalculationParametersEquilibrium.behavioralAgents = 0.01;
@@ -66,7 +67,7 @@ parfor i = 1:nworkers
 WEquilibrium{i} = Population(i).welfare(pEquilibrium{i}, costOfPublicFunds)
 
 [pEfficient{i}, WEfficient{i}, ComputationOutputEfficient{i}] = ...
-            findefficient(Population(i), costOfPublicFunds, CalculationParametersOptimum)
+            findefficient(Population(i), costOfPublicFunds, CalculationParametersOptimum, pEquilibrium{i})
         
 DEfficient{i} = Population(i).demand(pEfficient{i})
 
