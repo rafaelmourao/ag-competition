@@ -30,3 +30,6 @@
 *.sh~
 *.sh.o*
 *.sh.e*
+
+# Emacs autosave #
+\#*#
