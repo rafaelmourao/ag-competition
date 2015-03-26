@@ -162,7 +162,7 @@ classdef population
             ComputationOutput.runTime     = toc;
         end
         
-        function [p, W, ComputationOutput] = findefficient(Population, costOfPublicFunds, CalculationParameters)
+        function [p, W, ComputationOutput] = findefficient(Population, costOfPublicFunds, CalculationParameters, startingPrice)
             tic;
             % findefficient: This function finds an efficient allocation
             % given a cost of public funds. Inputs a population, cost of
@@ -184,7 +184,15 @@ classdef population
             dp_max = max(MU);
             lower_bound = dp_max .* 0;
             upper_bound = dp_max .* 1.2;
-            dp0 = (lower_bound+upper_bound)/2;
+            
+            % Set initial condition
+            if nargin == 4
+                dp0 = diff(startingPrice);
+                dp0 = min(dp0, upper_bound);
+                dp0 = max(dp0, lower_bound);
+            elseif nargin == 3
+                dp0 = (lower_bound+upper_bound)/2;
+            end;
             
             % Define function that turns dp into p, function that evaluates
             % -welfare given dp (the difference vector of p), and function that updates the ith
