@@ -11,14 +11,12 @@ addpath('../classes')
 load('Populations.mat')
 rng(1);
 
-test(1).contracts = [ 1 2 3 4 5 25 ];
-test(2).contracts = [ 1 6 14 18 21 23 24 25 ];
 
 costOfPublicFunds = 0;
-CalculationParametersEquilibrium.behavioralAgents = 0.1;
-CalculationParametersEquilibrium.fudge            = 1e-4;
-CalculationParametersEquilibrium.maxIterations    = 1e5;
-CalculationParametersEquilibrium.tolerance        = 10;
+CalculationParametersEquilibrium.behavioralAgents = 0.01;
+CalculationParametersEquilibrium.fudge            = 5e-5;
+CalculationParametersEquilibrium.maxIterations    = 1e6;
+CalculationParametersEquilibrium.tolerance        = 1;
 display(CalculationParametersEquilibrium)
 CalculationParametersOptimum.maxIterations        = 1e3;
 CalculationParametersOptimum.tolerance            = 0.01;

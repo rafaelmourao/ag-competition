@@ -19,13 +19,13 @@ typeDistributionMean{1} = ...
 typeDistributionMean{2} = ...
     [1.9*1e-4, 1330, 4340, meanS]
 typeDistributionMean{3} = ...
-    [1.5*1e-5, 1330, 4340, meanS]
+    [1e-4, 1330, 4340, meanS]
 typeDistributionMean{4} = ...
     [1.9*1e-3, 1330, 4340, meanS]
 typeDistributionMean{5} = ...
     [1.9*1e-4, 1330, 4340, meanS]
 typeDistributionMean{6} = ...
-    [1.5*1e-5, 1330, 4340, meanS]
+    [1e-4, 1330, 4340, meanS]
 
 typeDistributionLogCovariance{1} = ...
     [ 0.25 -0.01 -0.12 0    ; % c11 = 0.25 originally
@@ -69,27 +69,13 @@ costOfPublicFunds = 0;
 populationSize = 1e5
 publicInsuranceMaximum = 30000
 
-CalculationParametersEquilibrium.behavioralAgents = 0.1;
-CalculationParametersEquilibrium.fudge            = 1e-4;
-CalculationParametersEquilibrium.maxIterations    = 1e5;
-CalculationParametersEquilibrium.tolerance        = 10;
-
-CalculationParametersEquilibrium
-
-CalculationParametersOptimum.maxIterations        = 10^3;
-CalculationParametersOptimum.tolerance            = 0.01;
-
-CalculationParametersOptimum
-
 % Contracts
 
-deductibleVector = [ publicInsuranceMaximum, 1500, 750, 500, 250, linspace(5200,0,20) ]
-coinsuranceVector = [ 1, .1, .1, .1, .1, linspace(0.35,.1,20)  ]
-oopMaxVector = [ publicInsuranceMaximum, 4500, 3750, 3500, 2750, linspace(6400,2500,20) ]
-
+deductibleVector = [ 30000 23000 17000 12000 9200 6700 5200 3300 2100 1300 600 300 0]
+coinsuranceVector = [ 1 0.82  0.65  0.52  0.46  0.39 0.35  0.26  0.2  0.16  0.13  0.12 0.1]
+oopMaxVector = [ 30000 23500 17500 13000 10000 7800 6400  5000  4200  3500  2900  2700 2500]
 
 % Calculate equilibrium and optimal prices.
-
 
 if ~isempty(gcp('nocreate'))
      delete(gcp)
