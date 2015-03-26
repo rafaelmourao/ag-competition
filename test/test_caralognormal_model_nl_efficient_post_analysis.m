@@ -1,5 +1,4 @@
-%% Optimize
-
+%% Initialize
 addpath('../classes');
 clear;
 close all;
@@ -9,6 +8,7 @@ WEquilibrium = Population.welfare(pEquilibrium, 0);
 
 DEfficient = Population.demand(pEfficient);
 
+%% Plot graph
 f = @(pvar) WEquilibrium - Population.welfare(pvar, 0);
 n = 100;
 
@@ -19,3 +19,9 @@ for i = 1:n
 end;
 
 plot(alphagrid, fgrid);
+
+
+%% Optimize again
+% Population = population(Model, 5, -1);
+[pEfficient2, WEfficient2, ComputationOutputEfficient2] = ...
+    Population.findefficient(costOfPublicFunds, CalculationParametersOptimum, pEquilibrium);
