@@ -32,7 +32,7 @@ costOfPublicFunds = 0;
 populationSize = 10^3;
 
 CalculationParametersEquilibrium.behavioralAgents = 0.2;
-CalculationParametersEquilibrium.minimumFudge     = 5 * 10^(-4);
+CalculationParametersEquilibrium.fudge     = 5 * 10^(-4);
 CalculationParametersEquilibrium.maxIterations    = 10^4;
 CalculationParametersEquilibrium.tolerance        = 10;
 

@@ -133,7 +133,7 @@ classdef population
             % of room for improvement.
             tic;
             epsilon = CalculationParameters.behavioralAgents / Population.nContracts; % epsilon is the number of behavioral agents per contracts.
-            fudge   = CalculationParameters.minimumFudge;
+            fudge   = CalculationParameters.fudge;
             
             % Set line search parameters. Set defaults if they are not set.
             if (isfield(CalculationParameters, 'lineSearchAngleThreshold'))
