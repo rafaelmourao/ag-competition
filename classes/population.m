@@ -133,17 +133,37 @@ classdef population
             % of room for improvement.
             tic;
             epsilon = CalculationParameters.behavioralAgents / Population.nContracts; % epsilon is the number of behavioral agents per contracts.
-            fudge   = CalculationParameters.fudge;
+            fudge   = CalculationParameters.minimumFudge;
+            angleThreshold = CalculationParameters.lineSearchAngleThreshold;
+            angleThreshold = cos(pi .* angleThreshold ./ 180); % The threshold is measured in cosine in the calculations.
+            beta = CalculationParameters.lineSearchBeta;    
             
             error       = Inf;
             nIterations = 0;
             
-            function [p1, error] = iteration(p0)
-                [D, TC] = Population.demand(p0);
+            function [p1, error] = iteration(p0)            
+                
+                [D, TC]       = Population.demand(p0);
                 AC            = TC ./ (D + epsilon);
-                error         = norm(AC - p0, Inf);
-                currentFudge  = fudge + 1.1^(-nIterations-1); % I made the fudge factor close to 1 in the first few iterations so that it moves fast in the beginning. But decreasing by 10% in each iteration so that it quickly gets to the value specified in the function call.
-                p1            = currentFudge*AC + (1-currentFudge)*p0;
+                step          = AC - p0;
+                error         = norm(step, Inf);
+                
+                angle = -1;
+                currentFudge = beta;
+                
+                while (currentFudge > fudge && angle < angleThreshold)
+                    p1 = p + currentFudge .* step;
+                    [D1, TC1]       = Population.demand(p1);
+                    AC1            = TC1 ./ (D1 + epsilon);
+                    step1          = AC1 - p1;
+                    
+                    angle = dot(step, step1) / norm(step) / norm(step1);
+                    currentFudge = beta .* currentFudge;
+                end;
+                
+                if (currentFudge < fudge)
+                    display('Warning! Minimum fudge reached in equilibrium line-search calculation.');
+                end;
             end
             
             p = zeros(1, Population.nContracts);
