@@ -151,6 +151,7 @@ classdef population
             
             error       = Inf;
             nIterations = 0;
+            fudgeFlag   = 0;
             
             function [p1, error] = iteration(p0)            
                 
@@ -173,18 +174,16 @@ classdef population
                 end;
                 
                 if (currentFudge < fudge)
-                    display('Warning! Minimum fudge reached in equilibrium line-search calculation.');
+                    display('Minimum fudge reached in equilibrium line-search calculation. Exiting.');
+                    fudgeFlag = 1;
                 end;
             end
             
             p = zeros(1, Population.nContracts);
             while (error > CalculationParameters.tolerance) ...
-                    && (nIterations < CalculationParameters.maxIterations)
+                    && (nIterations < CalculationParameters.maxIterations) ...
+                    && (fudgeFlag == 0)
                 [p, error] = iteration(p);
-                % Require at least 50 iterations.
-                if (nIterations < 50)
-                    error = Inf;
-                end;
                 nIterations = nIterations + 1;
             end;
             

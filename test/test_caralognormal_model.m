@@ -29,14 +29,14 @@ typeDistributionLogCovariance = ...
 costOfPublicFunds = 0;
 
 % Calculation parameters
-populationSize = 10^5;
+populationSize = 1e3;
 
 CalculationParametersEquilibrium.behavioralAgents = 0.2;
-CalculationParametersEquilibrium.fudge            = 10^(-5);
-CalculationParametersEquilibrium.maxIterations    = 10^4;
-CalculationParametersEquilibrium.tolerance        = 10;
+CalculationParametersEquilibrium.fudge            = 1e-6;
+CalculationParametersEquilibrium.maxIterations    = 1e4;
+CalculationParametersEquilibrium.tolerance        = 1;
 
-CalculationParametersOptimum.maxIterations        = 10^3;
+CalculationParametersOptimum.maxIterations        = 1e3;
 CalculationParametersOptimum.tolerance            = 0.01;
 
 % List of models
