@@ -143,7 +143,7 @@ classdef population
                 angleThreshold = 0;
             end;
              
-            if (isfield(CalculationParameters, 'lineSearchAngleThreshold'))
+            if (isfield(CalculationParameters, 'lineSearchBeta'))
                 beta = CalculationParameters.lineSearchBeta;
             else
                 beta = 0.9;
