@@ -29,10 +29,10 @@ typeDistributionLogCovariance = ...
 costOfPublicFunds = 0;
 
 % Calculation parameters
-populationSize = 10^3;
+populationSize = 10^5;
 
 CalculationParametersEquilibrium.behavioralAgents = 0.2;
-CalculationParametersEquilibrium.fudge     = 5 * 10^(-4);
+CalculationParametersEquilibrium.fudge            = 10^(-5);
 CalculationParametersEquilibrium.maxIterations    = 10^4;
 CalculationParametersEquilibrium.tolerance        = 10;
 
@@ -43,7 +43,7 @@ CalculationParametersOptimum.tolerance            = 0.01;
 modelName              = 'interval';
 slopeVector            = 0:0.2:1;
 
-% Calculate equilibrium and optimal prices.
+% Calculate equilibrium prices.
 Model = healthcaralognormalmodel(slopeVector, typeDistributionMean, typeDistributionLogCovariance);
 Population = population(Model, populationSize);
 
@@ -52,6 +52,28 @@ Population = population(Model, populationSize);
 WEquilibrium = Population.welfare(pEquilibrium, ...
                                   costOfPublicFunds);
 
+display(ComputationOutputEquilibrium);
+display(pEquilibrium);
+display(DEquilibrium);
+display(WEquilibrium);
+
+% Efficient prices with the original algorithm.                              
 [pEfficient, WEfficient, ComputationOutputEfficient] = ...
-        findefficient(Population, costOfPublicFunds, CalculationParametersOptimum);
+        findefficient(Population, costOfPublicFunds, CalculationParametersOptimum, pEquilibrium);
 DEfficient = Population.demand(pEfficient);
+
+display(ComputationOutputEfficient);
+display(pEfficient);
+display(DEfficient);
+display(WEfficient);
+
+% Efficient prices with knitro.
+CalculationParametersOptimum.knitro = 'true';
+[pEfficient, WEfficient, ComputationOutputEfficient] = ...
+        findefficient(Population, costOfPublicFunds, CalculationParametersOptimum, pEquilibrium);
+DEfficient = Population.demand(pEfficient);
+
+display(ComputationOutputEfficient);
+display(pEfficient);
+display(DEfficient);
+display(WEfficient);

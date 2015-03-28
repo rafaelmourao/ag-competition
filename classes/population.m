@@ -242,7 +242,13 @@ classdef population
             W0 = Inf;
             dp = dp0;
             
-            % Main loop.
+            % Update calculation parameters to default of knitro off if
+            % necessary
+            if (~isfield(CalculationParameters, 'knitro'))
+                CalculationParameters.knitro = 'false';
+            end;
+            
+            % Main loop with the careful optimization a la Saez.
             while (nIterations < CalculationParameters.maxIterations) ...
                     && (error > CalculationParameters.tolerance)
                 % Update each dp(j) maximizing as in the Saez (2002) perturbation.
@@ -251,7 +257,7 @@ classdef population
                     [dpj, W] = fminbnd(g, lower_bound(j), upper_bound(j));
                     dp(j) = dpj;
                 end;
-                
+
                 % Update iteration, error, and improvement in welfare.
                 nIterations = nIterations + 1;
                 if nIterations > 50 % Guarantee that at least 50 iterations are done.
@@ -259,6 +265,18 @@ classdef population
                 end;
                 W0 = W;
             end;
+
+            % Now do a round of knitro if the knitro option is on.
+            if (strcmp(CalculationParameters.knitro, 'true'))
+                fprintf('Doing a last round of optimization with knitro.');
+                if (exist('knitromatlab', 'file'))
+                    [dp, W] = knitromatlab(f, dp, [], [], [], [], lower_bound, upper_bound);
+                else
+                    display('Warning: knitromatlab not found. Doing the last round of optimization with fmincon.');
+                    [dp, W] = fmincon(f, dp, [], [], [], [], lower_bound, upper_bound);
+                end;
+                fprintf('knitro round got welfare from %f to %f.\n', -W0, -W);
+            end;            
             
             p = integratedp(dp);
             W = -W;
