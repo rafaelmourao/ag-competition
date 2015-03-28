@@ -149,6 +149,13 @@ classdef population
                 beta = 0.9;
             end;
             
+            if (isfield(CalculationParameters, 'lineSearchErrorTolerance'))
+                lineSearchErrorTolerance = CalculationParameters.lineSearchErrorTolerance;
+            else
+                lineSearchErrorTolerance = Inf;
+            end;
+            
+            % Initialize counters.
             error       = Inf;
             nIterations = 0;
             fudgeFlag   = 0;
@@ -164,7 +171,7 @@ classdef population
                 currentFudge = beta;
                 
                 while (currentFudge > fudge && angle < angleThreshold)
-                    p1 = p + currentFudge .* step;
+                    p1 = p0 + currentFudge .* step;
                     [D1, TC1]       = Population.demand(p1);
                     AC1            = TC1 ./ (D1 + epsilon);
                     step1          = AC1 - p1;
@@ -174,8 +181,13 @@ classdef population
                 end;
                 
                 if (currentFudge < fudge)
-                    display('Minimum fudge reached in equilibrium line-search calculation. Exiting.');
-                    fudgeFlag = 1;
+                    if (norm(step, Inf) < lineSearchErrorTolerance)
+                        display('Minimum fudge reached in equilibrium line-search calculation. Exiting.');
+                        fudgeFlag = 1;
+                    else
+                        display('Warning! Fudge reached minimum. Error is still bigger than line-search error tolerance so we will continue moving half way closer to AC.');
+                        p1 = p0 + 0.5 .* step;
+                    end;
                 end;
             end
             
