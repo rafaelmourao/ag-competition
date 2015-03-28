@@ -134,9 +134,20 @@ classdef population
             tic;
             epsilon = CalculationParameters.behavioralAgents / Population.nContracts; % epsilon is the number of behavioral agents per contracts.
             fudge   = CalculationParameters.minimumFudge;
-            angleThreshold = CalculationParameters.lineSearchAngleThreshold;
-            angleThreshold = cos(pi .* angleThreshold ./ 180); % The threshold is measured in cosine in the calculations.
-            beta = CalculationParameters.lineSearchBeta;    
+            
+            % Set line search parameters. Set defaults if they are not set.
+            if (isfield(CalculationParameters, 'lineSearchAngleThreshold'))
+                angleThreshold = CalculationParameters.lineSearchAngleThreshold;
+                angleThreshold = cos(pi .* angleThreshold ./ 180); % The threshold is measured in cosine in the calculations.
+            else
+                angleThreshold = 0;
+            end;
+             
+            if (isfield(CalculationParameters, 'lineSearchAngleThreshold'))
+                beta = CalculationParameters.lineSearchBeta;
+            else
+                beta = 0.9;
+            end;
             
             error       = Inf;
             nIterations = 0;
