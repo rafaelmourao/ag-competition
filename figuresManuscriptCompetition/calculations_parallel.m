@@ -18,12 +18,13 @@ costOfPublicFunds = 0;
 populationSize = 10^6;
 
 CalculationParametersEquilibrium.behavioralAgents = 0.01;
-CalculationParametersEquilibrium.fudge            = 5 * 10^(-4);
-CalculationParametersEquilibrium.maxIterations    = 10^5;
-CalculationParametersEquilibrium.tolerance        = 10;
+CalculationParametersEquilibrium.fudge            = 1e-6;
+CalculationParametersEquilibrium.maxIterations    = 1e4;
+CalculationParametersEquilibrium.tolerance        = 1;
 
-CalculationParametersOptimum.maxIterations        = 10^3;
+CalculationParametersOptimum.maxIterations        = 1e3;
 CalculationParametersOptimum.tolerance            = 0.01;
+CalculationParametersOptimum.knitro               = 'true';
 
 % List of models
 modelName{1}              = 'interval';
