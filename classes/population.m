@@ -135,25 +135,67 @@ classdef population
             epsilon = CalculationParameters.behavioralAgents / Population.nContracts; % epsilon is the number of behavioral agents per contracts.
             fudge   = CalculationParameters.fudge;
             
+            % Set line search parameters. Set defaults if they are not set.
+            if (isfield(CalculationParameters, 'lineSearchAngleThreshold'))
+                angleThreshold = CalculationParameters.lineSearchAngleThreshold;
+                angleThreshold = cos(pi .* angleThreshold ./ 180); % The threshold is measured in cosine in the calculations.
+            else
+                angleThreshold = 0;
+            end;
+             
+            if (isfield(CalculationParameters, 'lineSearchBeta'))
+                beta = CalculationParameters.lineSearchBeta;
+            else
+                beta = 0.9;
+            end;
+            
+            if (isfield(CalculationParameters, 'lineSearchErrorTolerance'))
+                lineSearchErrorTolerance = CalculationParameters.lineSearchErrorTolerance;
+            else
+                lineSearchErrorTolerance = Inf;
+            end;
+            
+            % Initialize counters.
             error       = Inf;
             nIterations = 0;
+            fudgeFlag   = 0;
             
-            function [p1, error] = iteration(p0)
-                [D, TC] = Population.demand(p0);
+            function [p1, error] = iteration(p0)            
+                
+                [D, TC]       = Population.demand(p0);
                 AC            = TC ./ (D + epsilon);
-                error         = norm(AC - p0, Inf);
-                currentFudge  = fudge + 1.1^(-nIterations-1); % I made the fudge factor close to 1 in the first few iterations so that it moves fast in the beginning. But decreasing by 10% in each iteration so that it quickly gets to the value specified in the function call.
-                p1            = currentFudge*AC + (1-currentFudge)*p0;
+                step          = AC - p0;
+                error         = norm(step, Inf);
+                
+                angle = -1;
+                currentFudge = beta;
+                
+                while (currentFudge > fudge && angle < angleThreshold)
+                    p1 = p0 + currentFudge .* step;
+                    [D1, TC1]       = Population.demand(p1);
+                    AC1            = TC1 ./ (D1 + epsilon);
+                    step1          = AC1 - p1;
+                    
+                    angle = dot(step, step1) / norm(step) / norm(step1);
+                    currentFudge = beta .* currentFudge;
+                end;
+                
+                if (currentFudge < fudge)
+                    if (norm(step, Inf) < lineSearchErrorTolerance)
+                        display('Minimum fudge reached in equilibrium line-search calculation. Exiting.');
+                        fudgeFlag = 1;
+                    else
+                        display('Warning! Fudge reached minimum. Error is still bigger than line-search error tolerance so we will continue moving half way closer to AC.');
+                        p1 = p0 + 0.5 .* step;
+                    end;
+                end;
             end
             
             p = zeros(1, Population.nContracts);
             while (error > CalculationParameters.tolerance) ...
-                    && (nIterations < CalculationParameters.maxIterations)
+                    && (nIterations < CalculationParameters.maxIterations) ...
+                    && (fudgeFlag == 0)
                 [p, error] = iteration(p);
-                % Require at least 50 iterations.
-                if (nIterations < 50)
-                    error = Inf;
-                end;
                 nIterations = nIterations + 1;
             end;
             
@@ -211,7 +253,13 @@ classdef population
             W0 = Inf;
             dp = dp0;
             
-            % Main loop.
+            % Update calculation parameters to default of knitro off if
+            % necessary
+            if (~isfield(CalculationParameters, 'knitro'))
+                CalculationParameters.knitro = 'false';
+            end;
+            
+            % Main loop with the careful optimization a la Saez.
             while (nIterations < CalculationParameters.maxIterations) ...
                     && (error > CalculationParameters.tolerance)
                 % Update each dp(j) maximizing as in the Saez (2002) perturbation.
@@ -220,7 +268,7 @@ classdef population
                     [dpj, W] = fminbnd(g, lower_bound(j), upper_bound(j));
                     dp(j) = dpj;
                 end;
-                
+
                 % Update iteration, error, and improvement in welfare.
                 nIterations = nIterations + 1;
                 if nIterations > 50 % Guarantee that at least 50 iterations are done.
@@ -228,6 +276,18 @@ classdef population
                 end;
                 W0 = W;
             end;
+
+            % Now do a round of knitro if the knitro option is on.
+            if (strcmp(CalculationParameters.knitro, 'true'))
+                fprintf('Doing a last round of optimization with knitro.');
+                if (exist('knitromatlab', 'file'))
+                    [dp, W] = knitromatlab(f, dp, [], [], [], [], lower_bound, upper_bound);
+                else
+                    display('Warning: knitromatlab not found. Doing the last round of optimization with fmincon.');
+                    [dp, W] = fmincon(f, dp, [], [], [], [], lower_bound, upper_bound);
+                end;
+                fprintf('knitro round got welfare from %f to %f.\n', -W0, -W);
+            end;            
             
             p = integratedp(dp);
             W = -W;
