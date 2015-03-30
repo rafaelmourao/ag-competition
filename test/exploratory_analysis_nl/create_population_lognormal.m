@@ -223,7 +223,14 @@ fprintf('Time to create sample: %f\n',time)
 
 end
 
-save Populations.mat
-
 delete(poolobj)
+clear poolobj
+
+popsize=whos('Population');
+popsize = popsize.bytes;
+if popsize < 2e7
+    save('Populations.mat')
+else
+    save('Populations.mat','-v7.3')
+end
 

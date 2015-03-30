@@ -6,7 +6,7 @@ Author: Eduardo Azevedo and Rafael Mourao
 Date:   2015-03-20
 
 Simple script to print test tables from variables. Create matlab tables and
-print to an text files
+print to text files
 
 %}
 

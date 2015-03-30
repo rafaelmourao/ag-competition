@@ -113,8 +113,7 @@ for i = 1:length(test)
 end
 
 delete(poolobj)
-
-clear Population*
+clear poolobj Population*
 save('tests.mat')
 
 print_lognormal_tables
