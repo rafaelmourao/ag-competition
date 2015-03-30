@@ -45,7 +45,19 @@ for j = 1:nPopulations
     x(1,:)=num2cell(round(test(i).DEquilibrium{j},2));
     x(2,:)=num2cell(test(i).pEquilibrium{j});
     x(3,1)=num2cell(test(i).WEquilibrium{j});
-    x(4,1)=num2cell(test(i).ComputationOutputEquilibrium{j}.error);   
+    x(4,1)=num2cell(test(i).ComputationOutputEquilibrium{j}.error);
+    x(5,:)=num2cell(round(test(i).DEfficient{j},2));
+    x(6,:)=num2cell(test(i).pEfficient{j});
+    x(7,1)=num2cell(test(i).WEfficient{j});
+    x(8,1)=num2cell(test(i).ComputationOutputEfficient{j}.error);
+    x(9,2:end)=num2cell(round(test(i).DEquilibrium{j+nPopulations},2));
+    x(10,2:end)=num2cell(test(i).pEquilibrium{j+nPopulations});
+    x(11,1)=num2cell(test(i).WEquilibrium{j+nPopulations});
+
+    rowtitles = {'Equilibrium Demand','Equilibrium Prices',...
+          'Equilibrium Welfare', 'Equilibrium Error', 'Efficient Demand','Efficient Prices',...
+          'Efficient Welfare','Efficient Error', 'Mandate Demand','Mandate Prices','Mandate Welfare'}';
+      
     string = evalc('disp([rowtitles,x])');
     
 %     fprintf(fid,['\n\n' Testnames{j} '\n\n\n']);
