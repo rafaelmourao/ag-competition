@@ -62,9 +62,9 @@ for j = 1:nPopulations
     
 %     fprintf(fid,['\n\n' Testnames{j} '\n\n\n']);
     fprintf(fid,'\n\nMean Parameters\n\n');
-    fwrite(fid,evalc('disp(num2cell(Model(j).typeDistributionMean))'));
+    fwrite(fid,evalc('disp(num2cell(test(i).Model(j).typeDistributionMean))'));
     fprintf(fid,'\nLog Covariances\n\n');
-    fwrite(fid,evalc('disp(num2cell(Model(j).typeDistributionLogCovariance))'));
+    fwrite(fid,evalc('disp(num2cell(test(i).Model(j).typeDistributionLogCovariance))'));
     fwrite(fid,string);
 end
 
