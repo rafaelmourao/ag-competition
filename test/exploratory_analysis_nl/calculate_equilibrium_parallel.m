@@ -30,6 +30,7 @@ CalculationParametersEquilibrium.fudge            = 1e-6;
 CalculationParametersEquilibrium.maxIterations    = 1e4;
 CalculationParametersEquilibrium.tolerance        = 1;
 CalculationParametersEquilibrium.lineSearchErrorTolerance = Inf;
+CalculationParametersEquilibrium.lineSearchBeta   = .7;
 display(CalculationParametersEquilibrium)
 
 CalculationParametersOptimum.maxIterations        = 1e3;
@@ -49,9 +50,9 @@ for i = 1:length(test)
     
 for j = 1:nPopulations
     iter = iter + 1;
-    CalculationParametersEquilibrium(i) = test(i).CalculationParametersEquilibrium;
-    CalculationParametersOptimum(i) = test(i).CalculationParametersOptimum;
-    costOfPublicFunds(i) = test(i).costOfPublicFunds;    
+    CalculationParametersEquilibrium(iter) = test(i).CalculationParametersEquilibrium;
+    CalculationParametersOptimum(iter) = test(i).CalculationParametersOptimum;
+    costOfPublicFunds(iter) = test(i).costOfPublicFunds;    
     Population(iter) = Population_old(test(i).populations(j));
     Population(iter).uMatrix = Population(iter).uMatrix(:,test(i).contracts);
     Population(iter).cMatrix = Population(iter).cMatrix(:,test(i).contracts);
@@ -61,9 +62,9 @@ for j = 1:nPopulations
 end
 for j = (nPopulations+1):(2*nPopulations)
     iter = iter + 1;
-    CalculationParametersEquilibrium(i) = test(i).CalculationParametersEquilibrium;
-    CalculationParametersOptimum(i) = test(i).CalculationParametersOptimum;
-    costOfPublicFunds(i) = test(i).costOfPublicFunds;    
+    CalculationParametersEquilibrium(iter) = test(i).CalculationParametersEquilibrium;
+    CalculationParametersOptimum(iter) = test(i).CalculationParametersOptimum;
+    costOfPublicFunds(iter) = test(i).costOfPublicFunds;    
     Population(iter) = Population(iter-nPopulations);
     Population(iter).uMatrix = Population(iter-nPopulations).uMatrix(:,test(i).mandate:end);
     Population(iter).cMatrix = Population(iter-nPopulations).cMatrix(:,test(i).mandate:end);
@@ -88,6 +89,7 @@ parfor i = 1:nworkers
     
 [pEquilibrium{i}, DEquilibrium{i}, ACEquilibrium{i}, ComputationOutputEquilibrium{i}] = ...
          Population(i).findequilibrium(CalculationParametersEquilibrium(i))
+     
 WEquilibrium{i} = Population(i).welfare(pEquilibrium{i}, costOfPublicFunds(i))
 
 [pEfficient{i}, WEfficient{i}, ComputationOutputEfficient{i}] = ...
