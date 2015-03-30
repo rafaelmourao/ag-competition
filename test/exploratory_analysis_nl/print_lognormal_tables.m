@@ -33,9 +33,9 @@ string = evalc('disp(contractinfo)');
 fwrite(fid,string);
 
 fprintf(fid,'\nEquilibrium Calculation Parameters\n\n');
-fwrite(fid,evalc('disp(CalculationParametersEquilibrium)'));
+fwrite(fid,evalc('disp(test(i).CalculationParametersEquilibrium)'));
 fprintf(fid,'\nOptimum Calculation Parameters\n\n');
-fwrite(fid,evalc('disp(CalculationParametersOptimum)'));
+fwrite(fid,evalc('disp(test(i).CalculationParametersOptimum)'));
 
 x = cell(8,ncontracts);
 Tables = cell(1,ncontracts);
@@ -50,8 +50,8 @@ for j = 1:nPopulations
     x(6,:)=num2cell(test(i).pEfficient{j});
     x(7,1)=num2cell(test(i).WEfficient{j});
     x(8,1)=num2cell(test(i).ComputationOutputEfficient{j}.error);
-    x(9,2:end)=num2cell(round(test(i).DEquilibrium{j+nPopulations},2));
-    x(10,2:end)=num2cell(test(i).pEquilibrium{j+nPopulations});
+    x(9,test(i).mandate:end)=num2cell(round(test(i).DEquilibrium{j+nPopulations},2));
+    x(10,test(i).mandate:end)=num2cell(test(i).pEquilibrium{j+nPopulations});
     x(11,1)=num2cell(test(i).WEquilibrium{j+nPopulations});
 
     rowtitles = {'Equilibrium Demand','Equilibrium Prices',...

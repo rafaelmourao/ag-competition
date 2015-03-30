@@ -199,28 +199,28 @@ oopMaxVector = [ 30000 23500 17500 13000 10000 7800 6400  5000  4200  3500  2900
 % Calculate equilibrium and optimal prices.
 
 if ~isempty(gcp('nocreate'))
-     delete(gcp)
+    delete(gcp)
 end
 
 poolobj = parpool(nworkers)
 
 for i = 1:length(typeDistributionMean)
     
-Model(i) = healthcaralognormalmodel_nl( deductibleVector, ...
-    coinsuranceVector, oopMaxVector, publicInsuranceMaximum, ...  
-    typeDistributionMean{i}, typeDistributionLogCovariance{i});
-
-for j = 1:length(deductibleVector)
-    meanCoverage(j) = Model(i).meanCoverage(Model(i).contracts{j});
-end
-
-disp(meanCoverage)
-
-tic
-Population(i) = population(Model(i), populationSize, nworkers);
-time=toc;
-fprintf('Time to create sample: %f\n',time)
-
+    Model(i) = healthcaralognormalmodel_nl( deductibleVector, ...
+        coinsuranceVector, oopMaxVector, publicInsuranceMaximum, ...
+        typeDistributionMean{i}, typeDistributionLogCovariance{i});
+    
+    for j = 1:length(deductibleVector)
+        meanCoverage(j) = Model(i).meanCoverage(Model(i).contracts{j});
+    end
+    
+    disp(meanCoverage)
+    
+    tic
+    Population(i) = population(Model(i), populationSize, nworkers);
+    time=toc;
+    fprintf('Time to create sample: %f\n',time)
+    
 end
 
 delete(poolobj)
@@ -228,7 +228,7 @@ clear poolobj
 
 popsize=whos('Population');
 popsize = popsize.bytes;
-if popsize < 2e7
+if popsize < 2e9
     save('Populations.mat')
 else
     save('Populations.mat','-v7.3')
