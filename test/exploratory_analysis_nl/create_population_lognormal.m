@@ -7,10 +7,10 @@ Date:   2015-03-18
 %}
 
 clear;
-addpath('../classes')
+addpath('../../classes')
 rng(1);
 
-nworkers = 90;
+nworkers = 128;
 
 % Input model parameters
 meanS = sqrt(25000^2 - 5100^2);
