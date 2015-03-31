@@ -283,19 +283,22 @@ classdef population
             if (strcmp(CalculationParameters.knitro, 'true'))
                 fprintf('Doing a last round of optimization with knitro.');               
                 if (exist('knitromatlab', 'file'))
-                    if CalculationParameters.knitroMultistartN == 0;
-                        [dp, W] = knitromatlab(f, dp, [], [], [], [], lower_bound, upper_bound);
-                    else
+                    [dp, W] = knitromatlab(f, dp, [], [], [], [], lower_bound, upper_bound);
+                    if CalculationParameters.knitroMultistartN > 0;
                         % Generating random-named Knitro options file with 
                         % multi-start options
-                        knitrofile = ['knitro_' randi(1e6) '.opt'];
+                        knitrofile = ['knitro_' num2str(randi(1e6)) '.opt'];
                         fid = fopen(knitrofile,'w+');
                         fprintf(fid,'ms_enable 1\n');
                         fprintf(fid,'ms_maxsolves %d\n',CalculationParameters.knitroMultistartN);
                         fprintf(fid,'hessopt 2');
-                        close(fid)
-                        [dp, W] = knitromatlab(f, dp, [], [], [], [], lower_bound, upper_bound,[],[],[],knitrofile);
+                        fclose(fid);
+                        [dp2, W2] = knitromatlab(f, dp, [], [], [], [], lower_bound, upper_bound,[],[],[],knitrofile);
                         delete(knitrofile)
+                        if W2 < W
+                            W = W2;
+                            dp = dp2;
+                        end
                     end
                 else
                     display('Warning: knitromatlab not found. Doing the last round of optimization with fmincon.');
