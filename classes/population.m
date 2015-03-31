@@ -257,10 +257,9 @@ classdef population
             % necessary
             if (~isfield(CalculationParameters, 'knitro'))
                 CalculationParameters.knitro = 'false';
-                if (~isfield(CalculationParameters, 'knitroMultistartN'))
-                    CalculationParameters.knitroMultistartN = 0;
-                end
-            end;
+            elseif (~isfield(CalculationParameters, 'knitroMultistartN'))
+                CalculationParameters.knitroMultistartN = 0;
+            end
             
             % Main loop with the careful optimization a la Saez.
             while (nIterations < CalculationParameters.maxIterations) ...

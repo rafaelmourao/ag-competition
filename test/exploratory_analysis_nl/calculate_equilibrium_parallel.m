@@ -36,7 +36,7 @@ display(CalculationParametersEquilibrium)
 CalculationParametersOptimum.maxIterations        = 1e3;
 CalculationParametersOptimum.tolerance            = 0.01;
 CalculationParametersOptimum.knitro               = 'true';
-CalculationParameters.knitroMultistartN           = 100;
+CalculationParametersOptimum.knitroMultistartN    = 100;
 display(CalculationParametersOptimum)
 
 [test.CalculationParametersEquilibrium] = deal(CalculationParametersEquilibrium);
