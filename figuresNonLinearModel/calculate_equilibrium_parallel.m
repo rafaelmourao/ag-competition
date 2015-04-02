@@ -28,7 +28,7 @@ CalculationParametersEquilibrium.fudge            = 1e-6;
 CalculationParametersEquilibrium.maxIterations    = 1e4;
 CalculationParametersEquilibrium.tolerance        = 1;
 CalculationParametersEquilibrium.lineSearchErrorTolerance = Inf;
-CalculationParametersEquilibrium.lineSearchBeta   = .7;
+CalculationParametersEquilibrium.lineSearchBeta   = .9;
 display(CalculationParametersEquilibrium)
 
 CalculationParametersOptimum.maxIterations        = 1e3;
