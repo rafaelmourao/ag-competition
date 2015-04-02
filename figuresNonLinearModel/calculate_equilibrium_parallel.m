@@ -14,12 +14,10 @@ rng(1);
 test(1).contracts = 1:Population(1).nContracts;
 test(2).contracts = 1:Population(1).nContracts;
 test(3).contracts = 1:Population(1).nContracts;
-test(4).contracts = 1:Population(1).nContracts;
 
-test(1).populations = 1:6;
-test(2).populations = 7:12;
-test(3).populations = 13:18;
-test(4).populations = 19:21;
+test(1).populations = 1;
+test(2).populations = 2;
+test(3).populations = 3;
 
 [test.mandate] = deal(7); % index of the first mandate contract
 

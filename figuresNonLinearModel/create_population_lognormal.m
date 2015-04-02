@@ -17,164 +17,26 @@ meanS = sqrt(25000^2 - 5100^2);
 typeDistributionMean{1} = ...
     [1.9*1e-3, 1330, 4340, meanS];
 typeDistributionMean{2} = ...
-    [1.9*1e-4, 1330, 4340, meanS];
+    [1.9*1e-3, 1330, 4340, meanS];
 typeDistributionMean{3} = ...
-    [1e-4, 1330, 4340, meanS];
-typeDistributionMean{4} = ...
     [1.9*1e-3, 1330, 4340, meanS];
-typeDistributionMean{5} = ...
-    [1.9*1e-4, 1330, 4340, meanS];
-typeDistributionMean{6} = ...
-    [1e-4, 1330, 4340, meanS];
-typeDistributionMean{7} = ...
-    [1.9*1e-3, 1330, 4340, meanS];
-typeDistributionMean{8} = ...
-    [1.9*1e-4, 1330, 4340, meanS];
-typeDistributionMean{9} = ...
-    [1e-4, 1330, 4340, meanS];
-typeDistributionMean{10} = ...
-    [1.9*1e-3, 1330, 4340, meanS];
-typeDistributionMean{11} = ...
-    [1.9*1e-4, 1330, 4340, meanS];
-typeDistributionMean{12} = ...
-    [1e-4, 1330, 4340, meanS];
-typeDistributionMean{13} = ...
-    [1.9*1e-3, 1330, 4340, meanS];
-typeDistributionMean{14} = ...
-    [1.9*1e-4, 1330, 4340, meanS];
-typeDistributionMean{15} = ...
-    [1e-4, 1330, 4340, meanS];
-typeDistributionMean{16} = ...
-    [1.9*1e-3, 1330, 4340, meanS];
-typeDistributionMean{17} = ...
-    [1.9*1e-4, 1330, 4340, meanS];
-typeDistributionMean{18} = ...
-    [1e-4, 1330, 4340, meanS];
 
 
 typeDistributionLogCovariance{1} = ...
     [ 0.25 -0.01 -0.12 0    ; % c11 = 0.25 originally
-    -0.01  0.28 -0.03 0    ; % c22 = 0.98 originally
+    -0.01  0.98 -0.03 0    ; % c22 = 0.98 originally
     -0.12 -0.03  0.20 0    ; % c33 = 0.20 originally
     0     0     0    0.25]; % ???
 
 typeDistributionLogCovariance{2} = ...
-    [ 0.25 -0.01 -0.12 0    ; % c11 = 0.25 originally
-    -0.01  0.28 -0.03 0    ; % c22 = 0.98 originally
+    [ 1 -0.01 -0.12 0    ; % c11 = 0.25 originally
+    -0.01  0.98 -0.03 0    ; % c22 = 0.98 originally
     -0.12 -0.03  0.20 0    ; % c33 = 0.20 originally
     0     0     0    0.25]; % ???
 
 typeDistributionLogCovariance{3} = ...
-    [ 0.25 -0.01 -0.12 0    ; % c11 = 0.25 originally
-    -0.01  0.28 -0.03 0    ; % c22 = 0.98 originally
-    -0.12 -0.03  0.20 0    ; % c33 = 0.20 originally
-    0     0     0    0.25]; % ???
-
-typeDistributionLogCovariance{4} = ...
-    [ 0.25 -0.01 -0.12 0    ; % c11 = 0.25 originally
-    -0.01  0.98 -0.03 0    ; % c22 = 0.98 originally
-    -0.12 -0.03  0.20 0    ; % c33 = 0.20 originally
-    0     0     0    0.25]; % ???
-
-typeDistributionLogCovariance{5} = ...
-    [ 0.25 -0.01 -0.12 0    ; % c11 = 0.25 originally
-    -0.01  0.98 -0.03 0    ; % c22 = 0.98 originally
-    -0.12 -0.03  0.20 0    ; % c33 = 0.20 originally
-    0     0     0    0.25]; % ???
-
-typeDistributionLogCovariance{6} = ...
-    [ 0.25 -0.01 -0.12 0    ; % c11 = 0.25 originally
-    -0.01  0.98 -0.03 0    ; % c22 = 0.98 originally
-    -0.12 -0.03  0.20 0    ; % c33 = 0.20 originally
-    0     0     0    0.25]; % ???
-
-typeDistributionLogCovariance{7} = ...
-    [ 1 -0.01 -0.12 0    ; % c11 = 0.25 originally
-    -0.01  0.28 -0.03 0    ; % c22 = 0.98 originally
-    -0.12 -0.03  0.20 0    ; % c33 = 0.20 originally
-    0     0     0    0.25]; % ???
-
-typeDistributionLogCovariance{8} = ...
-    [ 1 -0.01 -0.12 0    ; % c11 = 0.25 originally
-    -0.01  0.28 -0.03 0    ; % c22 = 0.98 originally
-    -0.12 -0.03  0.20 0    ; % c33 = 0.20 originally
-    0     0     0    0.25]; % ???
-
-typeDistributionLogCovariance{9} = ...
-    [ 1 -0.01 -0.12 0    ; % c11 = 0.25 originally
-    -0.01  0.28 -0.03 0    ; % c22 = 0.98 originally
-    -0.12 -0.03  0.20 0    ; % c33 = 0.20 originally
-    0     0     0    0.25]; % ???
-
-typeDistributionLogCovariance{10} = ...
-    [ 1 -0.01 -0.12 0    ; % c11 = 0.25 originally
-    -0.01  0.98 -0.03 0    ; % c22 = 0.98 originally
-    -0.12 -0.03  0.20 0    ; % c33 = 0.20 originally
-    0     0     0    0.25]; % ???
-
-typeDistributionLogCovariance{11} = ...
-    [ 1 -0.01 -0.12 0    ; % c11 = 0.25 originally
-    -0.01  0.98 -0.03 0    ; % c22 = 0.98 originally
-    -0.12 -0.03  0.20 0    ; % c33 = 0.20 originally
-    0     0     0    0.25]; % ???
-
-typeDistributionLogCovariance{12} = ...
-    [ 1 -0.01 -0.12 0    ; % c11 = 0.25 originally
-    -0.01  0.98 -0.03 0    ; % c22 = 0.98 originally
-    -0.12 -0.03  0.20 0    ; % c33 = 0.20 originally
-    0     0     0    0.25]; % ???
-
-typeDistributionLogCovariance{13} = ...
-    [ 2 -0.01 -0.12 0    ; % c11 = 0.25 originally
-    -0.01  0.28 -0.03 0    ; % c22 = 0.98 originally
-    -0.12 -0.03  0.20 0    ; % c33 = 0.20 originally
-    0     0     0    0.25]; % ???
-
-typeDistributionLogCovariance{14} = ...
-    [ 2 -0.01 -0.12 0    ; % c11 = 0.25 originally
-    -0.01  0.28 -0.03 0    ; % c22 = 0.98 originally
-    -0.12 -0.03  0.20 0    ; % c33 = 0.20 originally
-    0     0     0    0.25]; % ???
-
-typeDistributionLogCovariance{15} = ...
-    [ 2 -0.01 -0.12 0    ; % c11 = 0.25 originally
-    -0.01  0.28 -0.03 0    ; % c22 = 0.98 originally
-    -0.12 -0.03  0.20 0    ; % c33 = 0.20 originally
-    0     0     0    0.25]; % ???
-
-typeDistributionLogCovariance{16} = ...
     [ 2 -0.01 -0.12 0    ; % c11 = 0.25 originally
     -0.01  0.98 -0.03 0    ; % c22 = 0.98 originally
-    -0.12 -0.03  0.20 0    ; % c33 = 0.20 originally
-    0     0     0    0.25]; % ???
-
-typeDistributionLogCovariance{17} = ...
-    [ 2 -0.01 -0.12 0    ; % c11 = 0.25 originally
-    -0.01  0.98 -0.03 0    ; % c22 = 0.98 originally
-    -0.12 -0.03  0.20 0    ; % c33 = 0.20 originally
-    0     0     0    0.25]; % ???
-
-typeDistributionLogCovariance{18} = ...
-    [ 2 -0.01 -0.12 0    ; % c11 = 0.25 originally
-    -0.01  0.98 -0.03 0    ; % c22 = 0.98 originally
-    -0.12 -0.03  0.20 0    ; % c33 = 0.20 originally
-    0     0     0    0.25]; % ???
-
-typeDistributionLogCovariance{19} = ...
-    [ 1 -0.01 -0.12 0    ; % c11 = 0.25 originally
-    -0.01  0.01 -0.03 0    ; % c22 = 0.98 originally
-    -0.12 -0.03  0.20 0    ; % c33 = 0.20 originally
-    0     0     0    0.25]; % ???
-
-typeDistributionLogCovariance{20} = ...
-    [ 1 -0.01 -0.12 0    ; % c11 = 0.25 originally
-    -0.01  0.01 -0.03 0    ; % c22 = 0.98 originally
-    -0.12 -0.03  0.20 0    ; % c33 = 0.20 originally
-    0     0     0    0.25]; % ???
-
-typeDistributionLogCovariance{21} = ...
-    [ 1 -0.01 -0.12 0    ; % c11 = 0.25 originally
-    -0.01  0.01 -0.03 0    ; % c22 = 0.98 originally
     -0.12 -0.03  0.20 0    ; % c33 = 0.20 originally
     0     0     0    0.25]; % ???
 
