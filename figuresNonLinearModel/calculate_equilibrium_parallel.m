@@ -24,7 +24,7 @@ test(3).populations = 3;
 [test.costOfPublicFunds] = deal(0);
 
 CalculationParametersEquilibrium.behavioralAgents = 0.01;
-CalculationParametersEquilibrium.fudge            = 1e-6;
+CalculationParametersEquilibrium.fudge            = 1e-8;
 CalculationParametersEquilibrium.maxIterations    = 1e4;
 CalculationParametersEquilibrium.tolerance        = 1;
 CalculationParametersEquilibrium.lineSearchErrorTolerance = Inf;
