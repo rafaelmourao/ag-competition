@@ -57,13 +57,13 @@ fid = fopen('tables/results.tex','w+');
 x = cell(13,19);
 x(:,1) = contract_titles;
 for i = 1:13
-    x{i,2} = num2str(round(test(1).DEquilibrium{1}(i),2),2);
-    x{i,8} = num2str(round(test(1).DEfficient{1}(i),2),2);
-    x{i,12} = num2str(round(test(3).DEquilibrium{1}(i),2),2);
-    x{i,18} = num2str(round(test(3).DEfficient{1}(i),2),2);
+    x{i,2} = num2str(round(test(1).DEquilibrium{1}(i),2),'%.2f');
+    x{i,8} = num2str(round(test(1).DEfficient{1}(i),2),'%.2f');
+    x{i,12} = num2str(round(test(3).DEquilibrium{1}(i),2),'%.2f');
+    x{i,18} = num2str(round(test(3).DEfficient{1}(i),2),'%.2f');
     if i > 6
-    x{i,5} = num2str(round(test(1).DEquilibrium{2}(i-6),2),2);
-    x{i,15} = num2str(round(test(3).DEquilibrium{2}(i-6),2),2);
+    x{i,5} = num2str(round(test(1).DEquilibrium{2}(i-6),2),'%.2f');
+    x{i,15} = num2str(round(test(3).DEquilibrium{2}(i-6),2),'%.2f');
     end
 end
 
