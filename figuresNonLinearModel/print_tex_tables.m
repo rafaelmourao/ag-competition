@@ -84,7 +84,7 @@ end
 
 % Printing Headers
 fprintf(fid,'\\begin{tabular}{lcclcclccllcclcclcc}\n')
-fprintf(fid, '&\\multicolumn{8}{c}{$\\sigma^2=0.25$} & & & \\multicolumn{8}{c}{$\\sigma^2=2$}\\\\\n');
+fprintf(fid, '&\\multicolumn{8}{c}{$\\sigma^2_A=0.25$} & & & \\multicolumn{8}{c}{$\\sigma^2_A=2$}\\\\\n');
 fprintf(fid, '\\cline{2-9} \\cline{12-19}\n');
 fprintf(fid,'& \\multicolumn{2}{c}{No Mandate} &  & \\multicolumn{2}{c}{Mandate} &  & \\multicolumn{2}{c}{Optimum}');
 fprintf(fid,'& & & \\multicolumn{2}{c}{No Mandate} &  & \\multicolumn{2}{c}{Mandate} &  & \\multicolumn{2}{c}{Optimum} \\\\\n');
@@ -99,7 +99,7 @@ for i = 1:size(x,1)
     end
     fprintf(fid,'\\\\\n');
 end
-fprintf(fid, '&&&&&&&&&&&&&&&&&&& \\\\ \n');
+fprintf(fid, '&&&&&&&&&&&&&&&&&& \\\\ \n');
 fprintf(fid, 'Welfare & \\multicolumn{2}{c}{0} &  & \\multicolumn{2}{c}{%.0f} &  & \\multicolumn{2}{c}{%.0f}',...
     round(test(1).WEquilibrium{2}-test(1).WEquilibrium{1}),round(test(1).WEfficient{1}-test(1).WEquilibrium{1}));
 fprintf(fid, '& & & \\multicolumn{2}{c}{0} &  & \\multicolumn{2}{c}{%.0f} &  & \\multicolumn{2}{c}{%.0f}',...
