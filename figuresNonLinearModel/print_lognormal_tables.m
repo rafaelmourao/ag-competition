@@ -53,10 +53,11 @@ for j = 1:nPopulations
     x(9,test(i).mandate:end)=num2cell(round(test(i).DEquilibrium{j+nPopulations},2));
     x(10,test(i).mandate:end)=num2cell(test(i).pEquilibrium{j+nPopulations});
     x(11,1)=num2cell(test(i).WEquilibrium{j+nPopulations});
+    x(12,1)=num2cell(test(i).ComputationOutputEfficient{j+nPopulations}.error);
 
     rowtitles = {'Equilibrium Demand','Equilibrium Prices',...
           'Equilibrium Welfare', 'Equilibrium Error', 'Efficient Demand','Efficient Prices',...
-          'Efficient Welfare','Efficient Error', 'Mandate Demand','Mandate Prices','Mandate Welfare'}';
+          'Efficient Welfare','Efficient Error', 'Mandate Demand','Mandate Prices','Mandate Welfare','Mandate Error'}';
       
     string = evalc('disp([rowtitles,x])');
     

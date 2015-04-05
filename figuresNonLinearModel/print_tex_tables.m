@@ -6,7 +6,7 @@ Author: Eduardo Azevedo and Rafael Mourao
 Date:   2015-04-04
 
 Simple script to print tex tables from variables. Create tex files with
-contracts and results tables
+contracts and results tables. 
 
 %}
 
@@ -83,7 +83,7 @@ for i = 1:13
 end
 
 % Printing Headers
-fprintf(fid,'\\begin{tabular}{lcclcclccllcclcclcc}\n')
+fprintf(fid,'\\begin{tabular}{lcclcclccllcclcclcc}\n');
 fprintf(fid, '&\\multicolumn{8}{c}{$\\sigma^2_A=0.25$} & & & \\multicolumn{8}{c}{$\\sigma^2_A=2$}\\\\\n');
 fprintf(fid, '\\cline{2-9} \\cline{12-19}\n');
 fprintf(fid,'& \\multicolumn{2}{c}{No Mandate} &  & \\multicolumn{2}{c}{Mandate} &  & \\multicolumn{2}{c}{Optimum}');
@@ -104,6 +104,6 @@ fprintf(fid, 'Welfare & \\multicolumn{2}{c}{0} &  & \\multicolumn{2}{c}{%.0f} & 
     round(test(1).WEquilibrium{2}-test(1).WEquilibrium{1}),round(test(1).WEfficient{1}-test(1).WEquilibrium{1}));
 fprintf(fid, '& & & \\multicolumn{2}{c}{0} &  & \\multicolumn{2}{c}{%.0f} &  & \\multicolumn{2}{c}{%.0f}',...
     round(test(3).WEquilibrium{2}-test(3).WEquilibrium{1}),round(test(3).WEfficient{1}-test(3).WEquilibrium{1}));
-fprintf(fid,'\\end{tabular}')
+fprintf(fid,'\\end{tabular}');
 fclose(fid);
 
