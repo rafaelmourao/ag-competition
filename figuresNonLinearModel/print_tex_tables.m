@@ -36,13 +36,14 @@ end
 fprintf(fid,'\\begin{tabular}{lrrrr}\n');
 fprintf(fid,'\\hline\n');
 fprintf(fid,'Contract number & Deductible & Coinsurance & Out of pocket maximum & Mean Coverage \\\\ \n');
-fprintf(fid,'\\hline\n');  
+fprintf(fid,'\\hline\n');
+maxStringLength = max(cellfun(@length,x));
 for i = 1:size(x,1)
     for j = 1:size(x,2)
         if j > 1
            fprintf(fid,' & ');
         end
-        fprintf(fid,' %s ',x{i,j});
+        fprintf(fid,'%-*s',maxStringLength(j),x{i,j});
     end
     fprintf(fid,'\\\\\n');
 end
@@ -90,12 +91,13 @@ fprintf(fid,'& \\multicolumn{2}{c}{No Mandate} &  & \\multicolumn{2}{c}{Mandate}
 fprintf(fid,'& & & \\multicolumn{2}{c}{No Mandate} &  & \\multicolumn{2}{c}{Mandate} &  & \\multicolumn{2}{c}{Optimum} \\\\\n');
 fprintf(fid, '\\cline{2-3} \\cline{5-6} \\cline{8-9} \\cline{12-13} \\cline{15-16} \\cline{18-19}\n');
 fprintf(fid, 'Contract number & Q & P & & Q & P & & Q & P & & & Q & P & & Q & P & & Q & P \\\\ \n');
+maxStringLength = max(cellfun(@length,x));
 for i = 1:size(x,1)
     for j = 1:size(x,2)
         if j > 1
            fprintf(fid,' & ');
         end
-        fprintf(fid,' %s ',x{i,j});
+        fprintf(fid,'%-*s',maxStringLength(j),x{i,j});
     end
     fprintf(fid,'\\\\\n');
 end
