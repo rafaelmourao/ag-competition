@@ -10,7 +10,7 @@ print to text files
 
 %}
 
-addpath('../../classes')
+addpath('../classes')
 load('tests.mat')
 format shortg
 

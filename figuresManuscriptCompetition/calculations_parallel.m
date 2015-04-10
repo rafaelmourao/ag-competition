@@ -15,7 +15,7 @@ typeDistributionLogCovariance = ...
 costOfPublicFunds = 0;
 
 % Calculation parameters
-populationSize = 10^6;
+populationSize = 5*10^6;
 
 CalculationParametersEquilibrium.behavioralAgents = 0.01;
 CalculationParametersEquilibrium.fudge            = 1e-6;
@@ -25,6 +25,8 @@ CalculationParametersEquilibrium.tolerance        = 1;
 CalculationParametersOptimum.maxIterations        = 1e3;
 CalculationParametersOptimum.tolerance            = 0.01;
 CalculationParametersOptimum.knitro               = 'true';
+CalculationParametersOptimum.knitroMultistartN    = 300;
+display(CalculationParametersOptimum);
 
 % List of models
 modelName{1}              = 'interval';
