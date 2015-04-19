@@ -146,7 +146,7 @@ for iLine = 1:5
         end;
         
         if (jColumn ~= 2) && (jColumn ~= 5) && (jColumn ~= 8) && (jColumn ~= 11)
-            cellTable{iLine, jColumn} = num2str(cellTable{iLine, jColumn}, 2);
+            cellTable{iLine, jColumn} = num2str(cellTable{iLine, jColumn}, '%.2f');
         else
             cellTable{iLine, jColumn} = num2str(cellTable{iLine, jColumn}, '%.0f');
         end;
