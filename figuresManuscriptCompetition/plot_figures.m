@@ -9,6 +9,7 @@ addpath('../classes');
 addpath('../plotFunctions');
 addpath('../plotFunctions/export_fig');
 addpath('./plotFunctions');
+mkdir('figures');
 rng(1);
 
 %% Individual models
