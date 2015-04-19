@@ -302,7 +302,11 @@ classdef population
                     end
                 else
                     display('Warning: knitromatlab not found. Doing the last round of optimization with fmincon.');
-                    [dp, W] = fmincon(f, dp, [], [], [], [], lower_bound, upper_bound);
+                    [dp2, W2] = fmincon(f, dp, [], [], [], [], lower_bound, upper_bound);
+                    if W2 < W
+                            W = W2;
+                            dp = dp2;
+                    end
                 end;
                 fprintf('knitro round got welfare from %f to %f.\n', -W0, -W);
             end;            
