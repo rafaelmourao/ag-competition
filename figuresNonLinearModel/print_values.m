@@ -17,9 +17,8 @@ actuarial_value_einav_worst = round(100*test(1).Model(1).meanCoverage(einav_wors
 actuarial_value_bronze = round(100*test(1).Model(1).meanCoverage(bronze_contract));
 actuarial_value_public = round(100*test(1).Model(1).meanCoverage(test(1).Model(1).nullContract));
 
-% Added by Eduardo
-welfare_gain_optimal_025 = round(test(1).WEfficient{1} - test(1).WEquilibrium{1});
 
+welfare_gain_optimal_025 = round(test(1).WEfficient{1} - test(1).WEquilibrium{1});
 welfare_gain_optimal_2 = round(test(3).WEfficient{1} - test(3).WEquilibrium{1});
 welfare_loss_mandate_2 = round(test(3).WEquilibrium{1} - test(3).WEquilibrium{2});
 

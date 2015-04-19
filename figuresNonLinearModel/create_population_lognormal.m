@@ -1,18 +1,26 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% create_population_lognormal.m %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% figuresNonLinearModel/create_population_lognormal.m %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %{
 Author: Eduardo Azevedo and Rafael Mourao
 Date:   2015-03-18
+
+In this script we create three populations for the nonlinear model 
+by inputing cell arrays with the distribution parameters, 
+typeDistributionMean and typeDistributionLogCovariance. As a result we
+create Model and Population arrays, which are saved in a MAT File.
 %}
 
 clear;
 addpath('../classes')
 rng(1);
 
+% Number of workers for population generation
+
 nworkers = 90;
 
 % Input model parameters
+
 meanS = sqrt(25000^2 - 5100^2);
 typeDistributionMean{1} = ...
     [1.9*1e-3, 1330, 4340, meanS];
@@ -20,7 +28,6 @@ typeDistributionMean{2} = ...
     [1.9*1e-3, 1330, 4340, meanS];
 typeDistributionMean{3} = ...
     [1.9*1e-3, 1330, 4340, meanS];
-
 
 typeDistributionLogCovariance{1} = ...
     [ 0.25 -0.01 -0.12 0    ; % c11 = 0.25 originally
@@ -40,8 +47,6 @@ typeDistributionLogCovariance{3} = ...
     -0.12 -0.03  0.20 0    ; % c33 = 0.20 originally
     0     0     0    0.25]; % ???
 
-costOfPublicFunds = 0;
-
 % Calculation parameters
 populationSize = 1e6;
 publicInsuranceMaximum = 30000;
@@ -52,7 +57,7 @@ deductibleVector = [ 30000 23000 17000 12000 9200 6700 5200 3300 2100 1300 600 3
 coinsuranceVector = [ 1 0.82  0.65  0.52  0.46  0.39 0.35  0.26  0.2  0.16  0.13  0.12 0.1];
 oopMaxVector = [ 30000 23500 17500 13000 10000 7800 6400  5000  4200  3500  2900  2700 2500];
 
-% Calculate equilibrium and optimal prices.
+% Create populations
 
 if ~isempty(gcp('nocreate'))
     delete(gcp)

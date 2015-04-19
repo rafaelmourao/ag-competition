@@ -4,6 +4,10 @@
 %{
 Author: Eduardo Azevedo and Rafael Mourao
 Date:   2015-03-18
+
+In this script we calculate and store the results of the simulations with
+the populations created with create_population_lognormal.m.
+
 %}
 
 clear;
