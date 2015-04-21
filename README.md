@@ -11,7 +11,7 @@ In this folder you can find the main classes used to run the examples. More docu
 - model.m: abstract class that defines all properties and methods that should be implemented by a model.
 	- healthcaralognormalmodel.m: subclass that defines the properties and methods of the linear case.
 	- healthcaralognormalmodel_nl: subclass that defines the properties and methods of the nonlinear case.
-- population.m: defines an object that holds a population (generated according to a model class) and implements the algorithms to find optimal and efficient prices and allocations.
+- population.m: defines an object that holds a population (generated according to a model class) and implements the algorithms to find optimal and efficient prices and allocations. Read the file description to see all the available calculation options.
 
 ## ./figuresManuscriptCompetition
 

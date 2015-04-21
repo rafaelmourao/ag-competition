@@ -85,7 +85,8 @@ classdef healthcaralognormalmodel_nl < model
                 u = - u / type.A;
                 u0 = - u0 / type.A;
                 
-            else
+            else % If there is no risk aversion, just calculate the 
+                 %  expected ex post utility
                 
                 u = expectedValue( obj, @(l) ...
                     exPostUtility(obj, contract, type, l),  contract, type );
@@ -114,7 +115,7 @@ classdef healthcaralognormalmodel_nl < model
         function c = cFunction(obj, contract, type)
             % Returns the expected private cost incurred by the insurer
             % when the agent chooses a contract. Currently, costs
-            % occur only when the agent chooses public insurance
+            % occur only when the agent chooses private insurance
             
             % Checking contract
             checkContract(obj, contract);
@@ -148,6 +149,8 @@ classdef healthcaralognormalmodel_nl < model
         end
         
         function type = typeDistribution(obj)
+            % Returns a rando structure with the individual caracteristics
+            % distributed according to the lognormal parameters
             
             v = lognrndfrommoments(...
                 obj.typeDistributionMean, obj.typeDistributionLogCovariance, 1);
@@ -183,6 +186,7 @@ classdef healthcaralognormalmodel_nl < model
         end
         
         function m = meanCoverage(obj, contract)
+            % Returns the expected coverage for the mean individual
             
             checkContract(obj, contract);
             

@@ -1,10 +1,9 @@
 classdef population
-    %population A finite list of simulated consumers.
+    %   population A finite list of simulated consumers.
     %   This class encodes a finite list of consumer types and a utility and cost
     %   matrices associated with this population and a model.
     %   These matrices specify willingness to pay (cost) of each consumer i for product j.
-    %   The
-    %   constructor takes the model and the population size as inputs. This
+    %   The constructor takes the model and the population size as inputs. This
     %   class also contains methods for calculating demand, equilibrium,
     %   and optimal allocations.
     
@@ -23,7 +22,11 @@ classdef population
         % each agent in the population. I did it like this to make it
         % easier to use different subclasses of the model class. But it is
         % super under-vectorized, so could be optimized a lot at the cost
-        % of some flexibility.
+        % of some flexibility. If argument nworkers is supplied, the
+        % population function calculations is made in parallel with
+        % nworkers. For reproducibility, types are generated outside of
+        % parallel loop.
+        
         function Population = population(Model, n, nworkers)
             if ( nargin < 3 || (nworkers < 0) )
                 nworkers = 0;
@@ -101,20 +104,30 @@ classdef population
         end
         % Computational methods
         function [p, D, AC, ComputationOutput] = findequilibrium(Population, CalculationParameters)
-            % findequilibrium: Finds an equilibrium by iterating average cost. To make it
-            % numerically stable must move towards average cost only a
-            % small fraction of the way. Parameters:
+            % findequilibrium: Finds an equilibrium by iterating average
+            % cost. To make it numerically stable must move towards average
+            % cost only a small fraction of the way, according to a linear
+            % search algorithm. 
+            %
+            % Parameters:
             % CalculationParameters.behavioralAgents,
-            % CalculationParameters.fudge (what fraction of the way you move towards average cost,
-            % 1 being the fastest and something close to 0 being more numerically stable,
-            % CalculationParameters.maxIterations, CalculationParameters.tolerance
-            % Output: price, demand, average cost and a ComputationOutput
-            % struct with fields .nIterations, .error (mean square distance
-            % between p and AC. Note that this number is often big even
-            % with a precise computation because it is driven by contracts
-            % taht are not traded. A good improvement would be having a
-            % better definition of error in each step of the algorithm),
-            % .runTime.
+            % CalculationParameters.fudge (minimum fraction of the way you
+            % move towards average cost),
+            % CalculationParameters.maxIterations,
+            % CalculationParameters.tolerance 
+            % Optional parameters:
+            % CalculationParameters.SearchAngleThreshold,
+            % CalculationParameters.lineSearchBeta and
+            % CalculationParameters.lineSearchErrorTolerance 
+            %
+            % Output: 
+            % price, demand, average cost and a ComputationOutput struct with
+            % fields nIterations, .error (mean square distance between p
+            % and AC. Note that this number is often big even with a
+            % precise computation because it is driven by contracts taht
+            % are not traded. A good improvement would be having a better
+            % definition of error in each step of the algorithm), .runTime.
+            %
             % This numerical method is pretty accurate for finding
             % equilibrium prices within the range of contracts that are
             % actually traded in equilibrium. The prices of contracts that
@@ -208,16 +221,26 @@ classdef population
             tic;
             % findefficient: This function finds an efficient allocation
             % given a cost of public funds. Inputs a population, cost of
-            % public funds, and calculation parameters. This is a
-            % structures with fields .tolerance and .maxIterations. Outputs
-            % are prices, welfare, and a ComputationOutput struct with
+            % public funds, and calculation parameters. 
+            %
+            % Parameters:
+            % structures with fields .tolerance and .maxIterations, and
+            % optional fields knitro ('true' or 'false') and
+            % knitroMultistartN (integer) for a second round optimization
+            % with several starting points. For now, the algorithm only
+            % works with knitro 9.1, reverting to fmincon if knitro 9.1+ is not found.
+            %
+            % Outputs:
+            % prices, welfare, and a ComputationOutput struct with
             % fields .nIterations, .error (in % terms vis a vis last
-            % iteration), and .runTime. The algorithm is designed to work
-            % with ordered sets of contracts. Each iteration loops over all
-            % contracts. It tries to maximize the price difference between
-            % contract j and j+1 while keeping fixed the relative prices
-            % of contracts below j and above j+1. So the numerical method
-            % is similar to the perturbation proof approach in Saez (2002).
+            % iteration), and .runTime. 
+            %
+            % The algorithm is designed to work with ordered sets of
+            % contracts. Each iteration loops over all contracts. It tries
+            % to maximize the price difference between contract j and j+1
+            % while keeping fixed the relative prices of contracts below j
+            % and above j+1. So the numerical method is similar to the
+            % perturbation proof approach in Saez (2002).
             
             % Calculate maximum and minimum marginal utility.
             MU = diff(Population.uMatrix, 1, 2);
