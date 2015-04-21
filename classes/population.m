@@ -1,11 +1,14 @@
 classdef population
-    %   population A finite list of simulated consumers.
-    %   This class encodes a finite list of consumer types and a utility and cost
-    %   matrices associated with this population and a model.
-    %   These matrices specify willingness to pay (cost) of each consumer i for product j.
-    %   The constructor takes the model and the population size as inputs. This
-    %   class also contains methods for calculating demand, equilibrium,
-    %   and optimal allocations.
+    %   population A finite list of simulated consumers. 
+    %
+    %   This class encodes a finite list of consumer types and utility,
+    %   cost and externality matrices associated with this population and a
+    %   model (the externality matrix is empty if no externality exists in
+    %   the model). These matrices specify willingness to pay (cost or
+    %   externality) of each consumer i for product j. The constructor
+    %   takes the model and the population size as inputs. This class also
+    %   contains methods for calculating demand, equilibrium, and optimal
+    %   allocations. See individual descriptions
     
     properties
         typeList
@@ -58,7 +61,7 @@ classdef population
             Population.nContracts = n_Contracts;
         end
         
-        % Basic functions
+        % Basic methods
         
         function [D, TC, CS, choiceVector] = demand(Population, p)
             % demand: Takes as input the population and a price vector.
@@ -102,7 +105,9 @@ classdef population
                 W = CS + (1+costOfPublicFunds).*(D * p' - sum(TC) - E);
             end
         end
+        
         % Computational methods
+        
         function [p, D, AC, ComputationOutput] = findequilibrium(Population, CalculationParameters)
             % findequilibrium: Finds an equilibrium by iterating average
             % cost. To make it numerically stable must move towards average
