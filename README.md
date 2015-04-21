@@ -1,4 +1,4 @@
-# agSimulations: replication code for "Perfect Competition in Markets with Adverse Selection" by Eduardo Azevedo and Daniel Gottlieb.
+# Replication code for "Perfect Competition in Markets with Adverse Selection" by Eduardo Azevedo and Daniel Gottlieb.
 
 The scripts replicate all the figures and tables in the paper. The most important methods are implemented as general MATLAB classes. These can be adapted to other models of firm competition with adverse selection. Developed by Eduardo Azevedo and Rafael Mourao.
 
@@ -6,7 +6,7 @@ The scripts are divided in five folders:
 
 ## `./classes`
 
-In this folder you can find the classes with the most important functions.
+Contains classes with the most important functions.
 
 - `model.m`: abstract class that defines all properties and methods that should be implemented by a model of perfect competition with adverse selection.
 	- `healthcaralognormalmodel.m`: subclass for the health insurance model in the paper with linear contracts and normally distributed losses.
@@ -35,14 +35,14 @@ Generates figures and tables for the nonlinear contracts health insurance model 
 
 ## `./tests`
 
-Several test scripts and a folder containing the codes used for a exploratory analysis of the nonlinear problem. Very useful if you plan on implementing different models.
+Test scripts and a folder containing exploratory analyses.
 
 ## `./plotFunctions`
 
 Auxiliary functions for plotting:
 
-- `num2bank.m` : ???
-- `./export_fig` : ???
+- `num2bank.m`: Downloaded from MATLAB central and slightly modified function for formatting numbers.
+- `./export_fig`: http://www.mathworks.com/matlabcentral/fileexchange/23629-export-fig
 
 ## Authors 
 
@@ -50,7 +50,7 @@ Eduardo Azevedo and Rafael Mourão
 
 ## Running
 
-All code was written in MATLAB, using MATLAB's OOP implementation. Tested in an unix server, MATLAB 2014b with a parallel cluster set up. Some of the code uses KNITRO 9.1.0, but it will probably run even if knitro is not installed.
+Tested in an unix server, MATLAB 2014b with a parallel cluster set up. Some of the code uses KNITRO 9.1.0. If KNITRO is not installed it will probably run correctly using MATLAB's optimization functions.
 
 ## License
 
