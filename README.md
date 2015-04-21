@@ -1,50 +1,56 @@
-# agSimulations: replication code for Azevedo and Gottlieb's paper "Perfect Competition in Markets with Adverse Selection"
+# agSimulations: replication code for "Perfect Competition in Markets with Adverse Selection" by Eduardo Azevedo and Daniel Gottlieb.
 
-Here you find the replication code for Azevedo and Gottlieb's paper "Perfect Competition in Markets with Adverse Selection". All code was written in MATLAB, using MATLAB's OOP implementation. While only the source code is included here, the populations used to generate the figures in the paper can be made available on request.
+Replication code for "Perfect Competition in Markets with Adverse Selection" by Eduardo Azevedo and Daniel Gottlieb. Developed by Rafael Mourao and Eduardo Azevedo. The most important methods are implemented as general MATLAB classes and can be used to calculate equilibrium and optimal allocations for different models.
 
-In the present version of the repository, the scripts are divided in five folders:
+The scripts are divided in five folders:
 
-## ./classes
+## `./classes`
 
-In this folder you can find the main classes used to run the examples. More documentation can be found inside the files.
+In this folder you can find the classes with the most important functions.
 
-- model.m: abstract class that defines all properties and methods that should be implemented by a model.
-	- healthcaralognormalmodel.m: subclass that defines the properties and methods of the linear case.
-	- healthcaralognormalmodel_nl: subclass that defines the properties and methods of the nonlinear case.
-- population.m: defines an object that holds a population (generated according to a model class) and implements the algorithms to find optimal and efficient prices and allocations. Read the file description to see all the available calculation options.
+- `model.m`: abstract class that defines all properties and methods that should be implemented by a model of perfect competition with adverse selection.
+	- `healthcaralognormalmodel.m`: subclass for the health insurance model in the paper with linear contracts and normally distributed losses.
+	- `healthcaralognormalmodel_nl`: subclass for the health insurance model in the paper with nonlinear contracts and lognormally distributed losses.
+- `population.m`: A population object describes the preferences of a finite number of consumers. This class has methods for finding competitive equilibria and optima.
 
-## ./figuresManuscriptCompetition
+## `./figuresManuscriptCompetition`
 
-Codes used to generate the linear example figures included in the manuscript.
+Generates figures and tables for the linear contracts health insurance model in the paper.
 
-- run_directory.sh: bash script used to run the whole folder.
-- calculations_parallel.m: creates the populations and run the main calculations in parallel
-- welfare_table.m: prints the tex tables used in the paper
-- plot_figures.m: plots the figures. Uses plotFunctions/plotEquilibriumAndOptimum.m as an auxiliary function for some figures.
+- `run_directory.sh`: bash script used to run the whole folder.
+- `calculations_parallel.m`: creates the populations and runs the main calculations in parallel
+- `welfare_table.m`: prints the `.tex` tables used in the paper
+- `plot_figures.m`: plots the figures. Uses `plotFunctions/plotEquilibriumAndOptimum.m` as an auxiliary function for some figures.
 
-## ./figuresNonLinearModel
+## `./figuresNonLinearModel`
 
-- run_directory.sh: bash script used to run the whole folder.
-- create_population_lognormal.m: creates the populations in parallel. Do not forget to set the desired number of workers, this program is very CPU intensive and may take a few days if running with few cores.
-- calculate_equilibrium_parallel.m: runs the main calculations.
-- prepare_figures.m: saves the data used for the plots.
-- plot_figures.m: plots the figures.
-- print* - print tex tables and values, and some .txt tables with additional information.
+Generates figures and tables for the nonlinear contracts health insurance model in the paper.
 
-## ./tests
+- `run_directory.sh`: bash script used to run the whole folder.
+- `create_population_lognormal.m`: creates the populations in parallel. Do not forget to set the desired number of workers, this program is very CPU intensive and may take a few days if running with few cores.
+- `calculate_equilibrium_parallel.m`: runs the main calculations.
+- `prepare_figures.m`: saves the data used for the plots.
+- `plot_figures.m`: plots the figures.
+- `print*` - print tex tables and values, and some `.txt` tables with additional information.
+
+## `./tests`
 
 Several test scripts and a folder containing the codes used for a exploratory analysis of the nonlinear problem. Very useful if you plan on implementing different models.
 
-## ./plotFunctions
+## `./plotFunctions`
 
 Auxiliary functions for plotting:
 
-- num2bank.m : ???
-- ./export_fig : ???
+- `num2bank.m` : ???
+- `./export_fig` : ???
 
 ## Authors 
 
-Eduardo Azevedo and Rafael Mour„o
+Eduardo Azevedo and Rafael Mour√£o
+
+## Running
+
+All code was written in MATLAB, using MATLAB's OOP implementation. Tested in an unix server, MATLAB 2014b with a parallel cluster set up. Some of the code uses KNITRO 9.1.0, but it will probably run even if knitro is not installed.
 
 ## License
 
