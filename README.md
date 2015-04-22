@@ -50,7 +50,7 @@ Eduardo Azevedo and Rafael Mourão
 
 ## Running
 
-Tested in an unix server, MATLAB 2014b with a parallel cluster set up. Some of the code uses KNITRO 9.1.0. If KNITRO is not installed it will probably run correctly using MATLAB's optimization functions.
+Tested in a linux server, MATLAB 2014b with a parallel cluster set up. Some of the code uses KNITRO 9.1.0. If KNITRO is not installed it will probably run correctly using MATLAB's optimization functions.
 
 ## License
 
