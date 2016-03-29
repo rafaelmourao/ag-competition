@@ -38,7 +38,7 @@ slopeVector{2}            = 0.60:0.04:1;
 moralHazardLogVariance{2} = 0.28;
 
 modelName{3}              = 'mandate_tougher';
-slopeVector{3}            = 0.60:0.04:1;
+slopeVector{3}            = 0.64:0.04:1;
 moralHazardLogVariance{3} = 0.28;
 
 modelName{4}              = 'interval_high_mh_variance';
