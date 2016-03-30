@@ -1,4 +1,9 @@
 #!/bin/bash
+#$ -cwd
+#$ -m ae
+#$ -M eduaze@gmail.com
+#$ -q bigram
+#$ -j y
 
 matlab -nodisplay < calculations_parallel.m;
 matlab -nodisplay < welfare_table.m;
