@@ -54,6 +54,8 @@ nSimulations = length(modelName);
 
 poolObject = parpool(nSimulations);
 
+S = cell(1, nSimulations);
+
 parfor i = 1 : nSimulations
     innerTypeDistributionLogCovariance = typeDistributionLogCovariance;
 
