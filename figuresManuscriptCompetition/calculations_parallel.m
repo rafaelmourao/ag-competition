@@ -37,17 +37,25 @@ modelName{2}              = 'mandate';
 slopeVector{2}            = 0.60:0.04:1;
 moralHazardLogVariance{2} = 0.28;
 
-modelName{3}              = 'mandate_tougher';
-slopeVector{3}            = 0.64:0.04:1;
-moralHazardLogVariance{3} = 0.28;
+modelName{3}              = 'interval_high_mh_variance';
+slopeVector{3}            = 0:0.04:1;
+moralHazardLogVariance{3} = 0.98;
 
-modelName{4}              = 'interval_high_mh_variance';
-slopeVector{4}            = 0:0.04:1;
+modelName{4}              = 'mandate_high_mh_variance';
+slopeVector{4}            = 0.60:0.04:1;
 moralHazardLogVariance{4} = 0.98;
 
-modelName{5}              = 'mandate_high_mh_variance';
-slopeVector{5}            = 0.60:0.04:1;
-moralHazardLogVariance{5} = 0.98;
+modelName{5}              = 'mandate_40';
+slopeVector{5}            = 0.40:0.04:1;
+moralHazardLogVariance{5} = 0.28;
+
+modelName{6}              = 'mandate_44';
+slopeVector{6}            = 0.44:0.04:1;
+moralHazardLogVariance{6} = 0.28;
+
+modelName{7}              = 'mandate_64';
+slopeVector{7}            = 0.64:0.04:1;
+moralHazardLogVariance{7} = 0.28;
 
 % Loop
 nSimulations = length(modelName);
