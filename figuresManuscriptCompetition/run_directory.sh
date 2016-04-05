@@ -5,6 +5,7 @@
 #$ -q bigram
 #$ -j y
 
+export MATLAB_PARALLEL_RAM=31G
 matlab -nodisplay < calculations_parallel.m;
 matlab -nodisplay < welfare_table.m;
 matlab < plot_figures.m;
