@@ -41,9 +41,9 @@ deltaP_40 = (Mandate_44.pEquilibrium(1) - Mandate_40.pEquilibrium(2))/spacing;
 % 60
 I = find(choice_mandate_60 == 1);
 mc = zeros(length(I), 1);
-for ii = I
-    type = Population_60.typeList{ii};
-    mc(ii) = type.M + 2 * 0.6 * type.H;
+for jj = 1 : length(I)
+    type = Population_60.typeList{I(jj)};
+    mc(jj) = type.M + 2 * 0.6 * type.H;
 end;
 
 mean_mc_60 = mean(mc);
@@ -51,9 +51,9 @@ mean_mc_60 = mean(mc);
 % 40
 I = find(choice_mandate_40 == 1);
 mc = zeros(length(I), 1);
-for ii = I
-    type = Population_60.typeList{ii};
-    mc(ii) = type.M + 2 * 0.4 * type.H;
+for jj = 1 : length(I)
+    type = Population_40.typeList{I(jj)};
+    mc(jj) = type.M + 2 * 0.4 * type.H;
 end;
 
 mean_mc_40 = mean(mc);
@@ -81,7 +81,7 @@ S_I_m_40 = dp_m - mean_mc_40;
 
 % C_change_in_prices_actual_60
     fileID = fopen('C_change_in_prices_actual.tex', 'w');
-    fprintf(fileID, '%0.0f', -deltaP_60(1) * spacing);
+    fprintf(fileID, '%0.0f', -deltaP_60 * spacing);
     fclose(fileID);
     
 % C_change_in_prices_predicted_60
@@ -101,5 +101,5 @@ S_I_m_40 = dp_m - mean_mc_40;
 
 % C_change_in_prices_actual_40
     fileID = fopen('C_change_in_prices_actual_40.tex', 'w');
-    fprintf(fileID, '%0.0f', -deltaP_40(1) * spacing);
+    fprintf(fileID, '%0.0f', -deltaP_40 * spacing);
     fclose(fileID);
