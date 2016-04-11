@@ -4,9 +4,10 @@
 *.eps
 *.fig
 
-# Latex #
-#########
+# Latex and text output #
+#########################
 *.tex
+*.txt
 
 # Matlab data #
 ###############
