@@ -1,6 +1,6 @@
 # Replication code for "Perfect Competition in Markets with Adverse Selection" by Eduardo Azevedo and Daniel Gottlieb.
 
-Replicates the figures and tables in the paper. The most important methods are implemented as general MATLAB classes. These can be adapted to other models of firm competition with adverse selection. Developed by Eduardo Azevedo and Rafael Mourao. Link to repository: https://github.com/rafaelmourao/ag-competition
+Replicates the figures and tables in the paper. The most important methods are implemented as general MATLAB classes. These can be adapted to other models of firm competition with adverse selection. Developed by Eduardo Azevedo and Rafael Mourao. Link to repository: https://github.com/rafaelmourao/ag-competition and fork at https://github.com/eduardomazevedo/ag-competition.
 
 The scripts are in five folders:
 
